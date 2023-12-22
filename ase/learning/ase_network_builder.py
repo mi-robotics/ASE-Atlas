@@ -36,6 +36,7 @@ import numpy as np
 import enum
 
 from learning import amp_network_builder
+from learning.modules.velocity_estimator import VelocityEstimator
 
 ENC_LOGIT_INIT_SCALE = 0.1
 
@@ -50,6 +51,7 @@ class ASEBuilder(amp_network_builder.AMPBuilder):
 
     class Network(amp_network_builder.AMPBuilder.Network):
         def __init__(self, params, **kwargs):
+            
             actions_num = kwargs.get('actions_num')
             input_shape = kwargs.get('input_shape')
             self.value_size = kwargs.get('value_size', 1)
@@ -65,7 +67,7 @@ class ASEBuilder(amp_network_builder.AMPBuilder):
 
             self.value = torch.nn.Linear(critic_out_size, self.value_size)
             self.value_act = self.activations_factory.create(self.value_activation)
-            
+                       
             if self.is_discrete:
                 self.logits = torch.nn.Linear(actor_out_size, actions_num)
             '''
@@ -119,7 +121,7 @@ class ASEBuilder(amp_network_builder.AMPBuilder):
         
         def load(self, params):
             super().load(params)
-
+           
             self._enc_units = params['enc']['units']
             self._enc_activation = params['enc']['activation']
             self._enc_initializer = params['enc']['initializer']
@@ -162,7 +164,8 @@ class ASEBuilder(amp_network_builder.AMPBuilder):
                 return logits
 
             if self.is_continuous:
-                mu = self.mu_act(self.mu(a_out))
+                mu_ = self.mu(a_out)
+                mu = self.mu_act(mu_)
                 if self.space_config['fixed_sigma']:
                     sigma = mu * 0.0 + self.sigma_act(self.sigma)
                 else:

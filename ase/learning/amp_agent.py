@@ -434,6 +434,7 @@ class AMPAgent(common_agent.CommonAgent):
         self._amp_observation_space = self.env_info['amp_observation_space']
         self._amp_batch_size = int(config['amp_batch_size'])
         self._amp_minibatch_size = int(config['amp_minibatch_size'])
+
         assert(self._amp_minibatch_size <= self.minibatch_size)
 
         self._disc_coef = config['disc_coef']

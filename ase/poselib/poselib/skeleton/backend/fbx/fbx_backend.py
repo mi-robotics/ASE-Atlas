@@ -34,7 +34,7 @@ NOTE: It requires the Python FBX package to be installed.
 """
 
 import sys
-
+sys.path.append('/home/milo/Documents/applications/fbx_py_bind/samples')
 import numpy as np
 
 try:
@@ -128,6 +128,7 @@ def fbx_to_npy(file_name_in, root_joint_name, fps):
         #fbx_time = root_curve.KeyGetTime(frame)
         for joint in joint_list:
             arr = np.array(_recursive_to_list(joint.EvaluateLocalTransform(fbx_time)))
+ 
             scales = np.array(_recursive_to_list(joint.EvaluateLocalScaling(fbx_time)))
             if not np.allclose(scales[0:3], scales[0]):
                 raise ValueError(
@@ -143,6 +144,7 @@ def fbx_to_npy(file_name_in, root_joint_name, fps):
         local_transforms.append(transforms_current_frame)
 
         time_sec += (1.0/fbx_fps)
+    
 
     local_transforms = np.array(local_transforms)
     print("Frame Count: ", len(local_transforms))
@@ -170,7 +172,7 @@ def _get_frame_count(fbx_scene):
     anim_range = anim_stack.GetLocalTimeSpan()
     duration = anim_range.GetDuration()
     fps = duration.GetFrameRate(duration.GetGlobalTimeMode())
-    frame_count = duration.GetFrameCount(True)
+    frame_count = duration.GetFrameCount()
 
     return anim_range, frame_count, fps
 

@@ -33,7 +33,7 @@ import yaml
 from poselib.poselib.skeleton.skeleton3d import SkeletonMotion
 from poselib.poselib.core.rotation3d import *
 from isaacgym.torch_utils import *
-
+from poselib.poselib.visualization.common import plot_skeleton_state, plot_skeleton_motion_interactive
 from utils import torch_utils
 
 import torch
@@ -90,12 +90,18 @@ class DeviceCache:
 
 
 class MotionLib():
-    def __init__(self, motion_file, dof_body_ids, dof_offsets,
-                 key_body_ids, device):
+    def __init__(self, motion_file, dof_body_ids, dof_offsets, 
+                 key_body_ids, device,
+                 dof_frames=None,
+                 revolute_y_only=False
+                 ):
         self._dof_body_ids = dof_body_ids
         self._dof_offsets = dof_offsets
         self._num_dof = dof_offsets[-1]
         self._key_body_ids = torch.tensor(key_body_ids, device=device)
+        self._dof_frames = dof_frames
+        self._revolute_y_only = revolute_y_only
+    
         self._device = device
         self._load_motions(motion_file)
 
@@ -156,12 +162,16 @@ class MotionLib():
         motion_len = self._motion_lengths[motion_ids]
         num_frames = self._motion_num_frames[motion_ids]
         dt = self._motion_dt[motion_ids]
-
+    
         frame_idx0, frame_idx1, blend = self._calc_frame_blend(motion_times, motion_len, num_frames, dt)
 
         f0l = frame_idx0 + self.length_starts[motion_ids]
         f1l = frame_idx1 + self.length_starts[motion_ids]
-
+    
+        # print(self.lrs.shape)
+        # print(self.lrs[2:2,:,:])
+        # print(f0l)
+       
         root_pos0 = self.gts[f0l, 0]
         root_pos1 = self.gts[f1l, 0]
 
@@ -175,6 +185,7 @@ class MotionLib():
 
         root_ang_vel = self.gravs[f0l]
         
+      
         key_pos0 = self.gts[f0l.unsqueeze(-1), self._key_body_ids.unsqueeze(0)]
         key_pos1 = self.gts[f1l.unsqueeze(-1), self._key_body_ids.unsqueeze(0)]
 
@@ -189,12 +200,15 @@ class MotionLib():
 
         root_pos = (1.0 - blend) * root_pos0 + blend * root_pos1
 
+
+
         root_rot = torch_utils.slerp(root_rot0, root_rot1, blend)
 
         blend_exp = blend.unsqueeze(-1)
         key_pos = (1.0 - blend_exp) * key_pos0 + blend_exp * key_pos1
         
         local_rot = torch_utils.slerp(local_rot0, local_rot1, torch.unsqueeze(blend, axis=-1))
+        
         dof_pos = self._local_rotation_to_dof(local_rot)
 
         return root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, key_pos
@@ -216,7 +230,7 @@ class MotionLib():
             curr_file = motion_files[f]
             print("Loading {:d}/{:d} motion files: {:s}".format(f + 1, num_motion_files, curr_file))
             curr_motion = SkeletonMotion.from_file(curr_file)
-
+            # plot_skeleton_motion_interactive(curr_motion)
             motion_fps = curr_motion.fps
             curr_dt = 1.0 / motion_fps
 
@@ -290,11 +304,14 @@ class MotionLib():
 
     def _calc_frame_blend(self, time, len, num_frames, dt):
 
-        phase = time / len
+        phase = time / len #percentage of the time in the clip
         phase = torch.clip(phase, 0.0, 1.0)
 
+        #get the frame given the time selected - int
         frame_idx0 = (phase * (num_frames - 1)).long()
         frame_idx1 = torch.min(frame_idx0 + 1, num_frames - 1)
+
+        #percentage this time is between frames in range [0,1]
         blend = (time - frame_idx0 * dt) / dt
 
         return frame_idx0, frame_idx1, blend
@@ -338,17 +355,30 @@ class MotionLib():
                 joint_exp_map = torch_utils.quat_to_exp_map(joint_q)
                 dof_pos[:, joint_offset:(joint_offset + joint_size)] = joint_exp_map
             elif (joint_size == 1):
-                joint_q = local_rot[:, body_id]
-                joint_theta, joint_axis = torch_utils.quat_to_angle_axis(joint_q)
-                joint_theta = joint_theta * joint_axis[..., 1] # assume joint is always along y axis
 
-                joint_theta = normalize_angle(joint_theta)
-                dof_pos[:, joint_offset] = joint_theta
+                if self._revolute_y_only:
+
+                    joint_q = local_rot[:, body_id]
+                    joint_theta, joint_axis = torch_utils.quat_to_angle_axis(joint_q)
+                    joint_theta = joint_theta * joint_axis[..., 1] # assume joint is always along y axis
+
+                    joint_theta = normalize_angle(joint_theta)
+                    dof_pos[:, joint_offset] = joint_theta
+                    
+                else:
+                    joint_q = local_rot[:, body_id]
+
+                    joint_theta, joint_axis = torch_utils.quat_to_angle_axis(joint_q)
+            
+                    joint_theta = joint_theta * torch.sum(joint_axis, dim=-1) 
+                    joint_theta = normalize_angle(joint_theta)
+            
+                    dof_pos[:, joint_offset] = joint_theta 
 
             else:
                 print("Unsupported joint type")
                 assert(False)
-
+   
         return dof_pos
 
     def _local_rotation_to_dof_vel(self, local_rot0, local_rot1, dt):
@@ -359,6 +389,8 @@ class MotionLib():
 
         diff_quat_data = quat_mul_norm(quat_inverse(local_rot0), local_rot1)
         diff_angle, diff_axis = quat_angle_axis(diff_quat_data)
+      
+        
         local_vel = diff_axis * diff_angle.unsqueeze(-1) / dt
         local_vel = local_vel
 
@@ -373,11 +405,26 @@ class MotionLib():
 
             elif (joint_size == 1):
                 assert(joint_size == 1)
+
                 joint_vel = local_vel[body_id]
-                dof_vel[joint_offset] = joint_vel[1] # assume joint is always along y axis
+
+                if self._revolute_y_only:
+                    dof_vel[joint_offset] = joint_vel[1] # assume joint is always along y axis:
+                
+                else:
+                    non_zero = torch.nonzero(joint_vel)
+                    assert(len(non_zero) <= 1)
+
+                    if len(non_zero) == 0:
+                        dof_vel[joint_offset] = joint_vel[0]
+                    else:
+                        dof_vel[joint_offset] = joint_vel[non_zero][0][0]
+
+
 
             else:
                 print("Unsupported joint type")
                 assert(False)
+          
 
         return dof_vel

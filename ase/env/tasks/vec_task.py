@@ -32,7 +32,7 @@ class VecTask():
         self.clip_actions = clip_actions
         self.rl_device = rl_device
 
-        print("RL device: ", rl_device)
+        print("RL device-: ", rl_device)
 
     def step(self, actions):
         raise NotImplementedError

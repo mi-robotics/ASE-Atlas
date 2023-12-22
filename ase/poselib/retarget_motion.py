@@ -211,17 +211,20 @@ def main():
 
     # load and visualize t-pose files
     source_tpose = SkeletonState.from_file(retarget_data["source_tpose"])
-    if VISUALIZE:
+    if True:
         plot_skeleton_state(source_tpose)
 
     target_tpose = SkeletonState.from_file(retarget_data["target_tpose"])
-    if VISUALIZE:
+    if True:
         plot_skeleton_state(target_tpose)
 
     # load and visualize source motion sequence
     source_motion = SkeletonMotion.from_file(retarget_data["source_motion"])
-    if VISUALIZE:
+    if True:
         plot_skeleton_motion_interactive(source_motion)
+    
+    print('kill me')
+    input()
 
     # parse data from retarget config
     joint_mapping = retarget_data["joint_mapping"]

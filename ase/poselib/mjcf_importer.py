@@ -29,12 +29,28 @@
 
 from poselib.skeleton.skeleton3d import SkeletonTree, SkeletonState
 from poselib.visualization.common import plot_skeleton_state
+from poselib.visualization.plot_simple import SimplePlotter
+
+
 
 # load in XML mjcf file and save zero rotation pose in npy format
 xml_path = "../../../../assets/mjcf/nv_humanoid.xml"
-skeleton = SkeletonTree.from_mjcf(xml_path)
+xml_path = "/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/data/assets/mjcf/amp_humanoid.xml"
+xml_path = "/home/milo/Documents/cdt-1/assets/mujoco_menagerie/unitree_a1/a1.xml"
+xml_path = "/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/data/assets/parkour/a1/urdf/a1.urdf"
+
+skeleton = SkeletonTree.from_urdf(xml_path)
+
+print(skeleton.to_dict()['node_names'])
+print(skeleton.to_dict()['parent_indices'])
+# print(skeleton.node_names)
+# print(len(skeleton.node_names))
+
+# input()
+
 zero_pose = SkeletonState.zero_pose(skeleton)
-zero_pose.to_file("data/nv_humanoid.npy")
+# plotter = SimplePlotter(skeleton_state=zero_pose)
+# zero_pose.to_file("data/a1_tpose_v2.npy")
 
 # visualize zero rotation pose
-plot_skeleton_state(zero_pose)
+# plot_skeleton_state(zero_pose)

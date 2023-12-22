@@ -34,7 +34,7 @@ motion)
 import numpy as np
 
 from .core import BasePlotterTask
-from .simple_plotter_tasks import Draw3DDots, Draw3DLines, Draw3DTrail
+from .simple_plotter_tasks import Draw3DDots, Draw3DLines, Draw3DTrail, DrawXDDots, DrawXDLines
 
 
 class Draw3DSkeletonState(BasePlotterTask):
@@ -51,9 +51,11 @@ class Draw3DSkeletonState(BasePlotterTask):
     ) -> None:
         super().__init__(task_name=task_name, task_type="3DSkeletonState")
         lines, dots = Draw3DSkeletonState._get_lines_and_dots(skeleton_state)
+
         self._lines_task = Draw3DLines(
             self.get_scoped_name("bodies"), lines, joints_color, alpha=alpha
         )
+      
         self._dots_task = Draw3DDots(
             self.get_scoped_name("joints"), dots, lines_color, alpha=alpha
         )

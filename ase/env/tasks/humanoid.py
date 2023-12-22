@@ -76,6 +76,7 @@ class Humanoid(BaseTask):
         dof_state_tensor = self.gym.acquire_dof_state_tensor(self.sim)
         sensor_tensor = self.gym.acquire_force_sensor_tensor(self.sim)
         rigid_body_state = self.gym.acquire_rigid_body_state_tensor(self.sim)
+        
         contact_force_tensor = self.gym.acquire_net_contact_force_tensor(self.sim)
 
         sensors_per_env = 2
@@ -289,6 +290,13 @@ class Humanoid(BaseTask):
             self.envs.append(env_ptr)
 
         dof_prop = self.gym.get_actor_dof_properties(self.envs[0], self.humanoid_handles[0])
+
+        print('DOF PROPERTIES: -------------------------------------------------')
+        print(dof_prop["driveMode"])
+        print(dof_prop["stiffness"])
+        print(dof_prop["damping"])
+     
+
         for j in range(self.num_dof):
             if dof_prop['lower'][j] > dof_prop['upper'][j]:
                 self.dof_limits_lower.append(dof_prop['upper'][j])

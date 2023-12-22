@@ -1,0 +1,3 @@
+motions:
+  - file: "demo_v7.npy"
+    weight: 1.0

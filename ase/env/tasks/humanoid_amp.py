@@ -96,13 +96,16 @@ class HumanoidAMP(Humanoid):
         else:
             assert(self._amp_obs_demo_buf.shape[0] == num_samples)
         
+        #returns motions indexes from the motion library
         motion_ids = self._motion_lib.sample_motions(num_samples)
         
         # since negative times are added to these values in build_amp_obs_demo,
         # we shift them into the range [0 + truncate_time, end of clip]
-        truncate_time = self.dt * (self._num_amp_obs_steps - 1)
-        motion_times0 = self._motion_lib.sample_time(motion_ids, truncate_time=truncate_time)
-        motion_times0 += truncate_time
+        # dt is the control frequency
+       
+        truncate_time = self.dt * (self._num_amp_obs_steps - 1) # the time diff to find the last timestep we can sample 
+        motion_times0 = self._motion_lib.sample_time(motion_ids, truncate_time=truncate_time) # a randomly slected start time of the motion clip
+        motion_times0 += truncate_time #the last timestep of the motion clips to be sampled
 
         amp_obs_demo = self.build_amp_obs_demo(motion_ids, motion_times0)
         self._amp_obs_demo_buf[:] = amp_obs_demo.view(self._amp_obs_demo_buf.shape)
@@ -116,12 +119,16 @@ class HumanoidAMP(Humanoid):
         motion_ids = torch.tile(motion_ids.unsqueeze(-1), [1, self._num_amp_obs_steps])
         motion_times = motion_times0.unsqueeze(-1)
         time_steps = -dt * torch.arange(0, self._num_amp_obs_steps, device=self.device)
-        motion_times = motion_times + time_steps
+        #creates reverse time e.g [1, 0.9, 0.8] sample time to gather shape [batch, num_obs_steps]
+        motion_times = motion_times + time_steps 
 
+        #flattens ids and motions times
         motion_ids = motion_ids.view(-1)
         motion_times = motion_times.view(-1)
+        
         root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, key_pos \
                = self._motion_lib.get_motion_state(motion_ids, motion_times)
+        
         amp_obs_demo = build_amp_observations(root_pos, root_rot, root_vel, root_ang_vel,
                                               dof_pos, dof_vel, key_pos,
                                               self._local_root_obs, self._root_height_obs,
@@ -149,11 +156,13 @@ class HumanoidAMP(Humanoid):
         return
 
     def _load_motion(self, motion_file):
+     
         assert(self._dof_offsets[-1] == self.num_dof)
         self._motion_lib = MotionLib(motion_file=motion_file,
                                      dof_body_ids=self._dof_body_ids,
                                      dof_offsets=self._dof_offsets,
                                      key_body_ids=self._key_body_ids.cpu().numpy(), 
+                                     revolute_y_only=True,
                                      device=self.device)
         return
     

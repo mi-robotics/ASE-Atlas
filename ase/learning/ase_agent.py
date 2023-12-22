@@ -36,11 +36,42 @@ from rl_games.algos_torch.running_mean_std import RunningMeanStd
 
 from utils import torch_utils
 from learning import ase_network_builder
+from learning.modules.velocity_estimator import VelocityEstimator
 
 class ASEAgent(amp_agent.AMPAgent):
     def __init__(self, base_name, config):
         super().__init__(base_name, config)
+
+        self.modules = {}
+        self._env_velocity_obs = config.get('envVelocityEstimateObs', False)
+        self._train_with_velocity_estimate = config.get('trainWithVelocityEstimate', False)
+        self._optimize_with_velocity_estimate = config.get('optimizeWithVelocityEstimate', False)
+        self._use_velocity_estimator = config.get('use_velocity_estimate', False)
+
+        if self._use_velocity_estimator:
+            self.vel_estimator = VelocityEstimator(config['vel_estimator'])
+            self.vel_optim = torch.optim.Adam(self.vel_estimator.parameters(), config['vel_estimator']['lr'] )
+            self.vel_grad_norm = config['vel_estimator']['grad_norm']
+            self.modules['vel_estimator'] = self.vel_estimator
+
+
         return
+    
+    def save(self, fn):
+        super().save(fn)
+
+        if self._use_velocity_estimator:
+            raise 'Not Implimented'
+        
+        for mod in self.modules.keys():
+            #save module wieghts
+            pass
+
+    def restore(self, fn):
+        super().restore(fn)
+
+        if self._use_velocity_estimator:
+            raise 'Not Implimented'
 
     def init_tensors(self):
         super().init_tensors()
@@ -70,6 +101,11 @@ class ASEAgent(amp_agent.AMPAgent):
 
         for n in range(self.horizon_length):
             self.obs = self.env_reset(done_indices)
+
+            if self._env_velocity_obs:
+                self.velocity_obs[done_indices] = self.vec_env.env.get_velocity_obs(done_indices)
+                self.experience_buffer.update_data('velocity_obs', n, infos['velocity_obs'])
+
             self.experience_buffer.update_data('obses', n, self.obs['obs'])
 
             self._update_latents()
@@ -78,6 +114,10 @@ class ASEAgent(amp_agent.AMPAgent):
                 masks = self.vec_env.get_action_masks()
                 res_dict = self.get_masked_action_values(self.obs, self._ase_latents, masks)
             else:
+                if self._train_with_velocity_estimate:
+                    velocity_est = self.vel_estimator.inference(self.velocity_obs)
+                    #TODO: replace the velocity in the observation
+
                 res_dict = self.get_action_values(self.obs, self._ase_latents, self._rand_action_probs)
 
             for k in update_list:
@@ -87,7 +127,12 @@ class ASEAgent(amp_agent.AMPAgent):
                 self.experience_buffer.update_data('states', n, self.obs['states'])
 
             self.obs, rewards, self.dones, infos = self.env_step(res_dict['actions'])
+            
+            if self._env_velocity_obs:
+                self.velocity_obs = infos['velocity_obs']
+
             shaped_rewards = self.rewards_shaper(rewards)
+
             self.experience_buffer.update_data('rewards', n, shaped_rewards)
             self.experience_buffer.update_data('next_obses', n, self.obs['obs'])
             self.experience_buffer.update_data('dones', n, self.dones)
@@ -196,6 +241,15 @@ class ASEAgent(amp_agent.AMPAgent):
         actions_batch = input_dict['actions']
         obs_batch = input_dict['obs']
         obs_batch = self._preproc_obs(obs_batch)
+
+        if self._use_velocity_estimator:
+            velocity_obs = input_dict['velocity_obs']
+            velocity_gt = input_dict['obs'][:]
+            vel_loss = self.vel_estimator.loss(self.vel_estimator(velocity_obs), velocity_gt)
+            self.vel_optim.zero_grad()
+            vel_loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.vel_estimator.parameters(), self.vel_grad_norm)
+            self.vel_optim.step()
 
         amp_obs = input_dict['amp_obs'][0:self._amp_minibatch_size]
         amp_obs = self._preproc_amp_obs(amp_obs)
@@ -477,7 +531,7 @@ class ASEAgent(amp_agent.AMPAgent):
         assert(n == action_params.shape[0])
 
         new_z = self._sample_latents(n)
-        mu, sigma = self._eval_actor(obs=obs, ase_latents=new_z)
+        mu, sigma,  = self._eval_actor(obs=obs, ase_latents=new_z)
 
         clipped_action_params = torch.clamp(action_params, -1.0, 1.0)
         clipped_mu = torch.clamp(mu, -1.0, 1.0)

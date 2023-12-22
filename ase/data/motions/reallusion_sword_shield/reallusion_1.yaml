@@ -1,0 +1,3 @@
+motions:
+  - file: "RL_Avatar_WalkForward01_Motion.npy"
+    weight: 1.0

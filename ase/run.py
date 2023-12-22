@@ -51,6 +51,12 @@ from learning import ase_players
 from learning import ase_models
 from learning import ase_network_builder
 
+from learning.LASD import lasd_agent
+from learning.LASD import lasd_players
+from learning.LASD import lasd_models
+from learning.LASD import lasd_network_builder
+
+
 from learning import hrl_agent
 from learning import hrl_players
 from learning import hrl_models
@@ -189,6 +195,11 @@ def build_alg_runner(algo_observer):
     runner.player_factory.register_builder('ase', lambda **kwargs : ase_players.ASEPlayer(**kwargs))
     runner.model_builder.model_factory.register_builder('ase', lambda network, **kwargs : ase_models.ModelASEContinuous(network))  
     runner.model_builder.network_factory.register_builder('ase', lambda **kwargs : ase_network_builder.ASEBuilder())
+
+    runner.algo_factory.register_builder('lasd', lambda **kwargs : lasd_agent.LASDAgent(**kwargs))
+    runner.player_factory.register_builder('lasd', lambda **kwargs : lasd_players.LASDPlayerContinuous(**kwargs))
+    runner.model_builder.model_factory.register_builder('lasd', lambda network, **kwargs : lasd_models.ModelLASDContinuous(network))  
+    runner.model_builder.network_factory.register_builder('lasd', lambda **kwargs : lasd_network_builder.LASDBuilder())
     
     runner.algo_factory.register_builder('hrl', lambda **kwargs : hrl_agent.HRLAgent(**kwargs))
     runner.player_factory.register_builder('hrl', lambda **kwargs : hrl_players.HRLPlayer(**kwargs))

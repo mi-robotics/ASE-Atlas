@@ -1,0 +1,34 @@
+{
+    "source_motion": "data/dog_motion.npy",
+    "target_motion_path": "data/a1_motion.npy",
+    "source_tpose": "data/dog_tpose.npy",
+    "target_tpose": "data/a1_tpose.npy",
+    "joint_mapping": {
+         "Spine1": "trunk",
+         
+         "RightShoulder":"FR_hips",
+         "LeftShoulder":"FL_hips",
+         "RightArm":"FR_thigh",
+         "LeftArm":"FL_thigh",
+         "RightForeArm":"FR_calf",
+         "LeftForeArm":"FL_calf",
+         "RightHand_end":"FR_calf_toe",
+         "LeftHand_end":"FL_calf_toe",
+
+         "RightUpLeg":"RR_thigh",
+         "LeftUpLeg":"RL_thigh",
+         "RightUpLeg":"RL_thigh",
+
+         "RightLeg":"RR_calf",
+         "LeftLeg":"RL_calf",
+         "RightFoot_end":"RR_calf_toe",
+         "LeftFoot_end":"RL_calf_toe"
+    },
+    "rotation": [0, 0, 0.7071068, 0.7071068],
+    "scale": 0.056444,
+	"root_height_offset": 0.05,
+	"trim_frame_beg": 75,
+	"trim_frame_end": 372
+}
+
+

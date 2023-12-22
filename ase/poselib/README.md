@@ -61,3 +61,26 @@ Additionally, a SkeletonState T-Pose file and retargeting config file are also p
 
 ### Documentation
 We provide a description of the functions and classes available in poselib in the comments of the APIs. Please check them out for more details.
+
+
+
+##
+In the context of retargeting motion data from one skeleton to another, the parameters you've mentioned—rotation, scale, root_height_offset—play important roles in aligning and adapting the source motion to the target skeleton. Here's an explanation of each parameter:
+
+    Rotation (Quaternion):
+        Purpose: Rotation represents the orientation of the source skeleton in relation to the target skeleton. It's often used to account for differences in the initial pose or orientation between the two skeletons.
+        Usage: The provided quaternion (four-element vector) describes a rotation that should be applied to the source motion to align it with the target motion. In your example, the quaternion [0, 0, 0.7071068, 0.7071068] represents a rotation of 90 degrees (π/2 radians) around the Z-axis. This means that the source skeleton needs to be rotated by 90 degrees to match the orientation of the target skeleton.
+
+    Scale:
+        Purpose: Scale accounts for differences in the size or proportions of the source and target skeletons. It's used to ensure that the retargeted motion is scaled appropriately.
+        Usage: The scale parameter specifies a scaling factor that should be applied to the source motion. It determines how much the source motion should be resized to match the proportions of the target skeleton. A smaller value would shrink the motion, while a larger value would enlarge it. The specific value (0.056444 in your example) depends on the scaling factor required to match the source and target skeletons.
+
+    Root Height Offset:
+        Purpose: The root height offset is used to adjust the height of the source skeleton's root (often the hips or pelvis) relative to the target skeleton's root. This is important for ensuring that the source skeleton's motion aligns with the target skeleton's position in the vertical axis.
+        Usage: The root_height_offset parameter specifies how much the source skeleton's root should be raised or lowered to match the height of the target skeleton. A positive value raises the source skeleton, while a negative value lowers it. The specific value (0.05 in your example) depends on the vertical offset needed to align the skeletons' root positions.
+
+These parameters are crucial for making sure that the retargeted motion appears natural and correctly aligned with the target skeleton. They are typically determined through a combination of manual adjustment and experimentation to achieve the best visual results.
+
+Finding the precise values for these parameters often involves a trial-and-error process, where you visually inspect the retargeted motion and make adjustments until it looks natural and properly aligned with the target skeleton. It's common to work iteratively, refining these parameters until you achieve the desired result.
+
+Additionally, you may use specialized software or tools that provide visualization and adjustment capabilities to aid in the retargeting process. The specific values will depend on the characteristics of the source and target skeletons and the motion data you're working with.

@@ -37,6 +37,7 @@ import torch
 from ..core import *
 from .backend.fbx.fbx_read_wrapper import fbx_to_array
 import scipy.ndimage.filters as filters
+from urdf_parser_py.urdf import URDF, Link, Joint
 
 
 class SkeletonTree(Serializable):
@@ -171,9 +172,90 @@ class SkeletonTree(Serializable):
                 ("local_translation", tensor_to_dict(self.local_translation)),
             ]
         )
+    
+    @classmethod
+    def from_urdf(cls, path:str, root:str='trunk', 
+                  root_traversing_order=['FL_hip_joint', 'FR_hip_joint', 'RL_hip_joint', 'RR_hip_joint'],
+                  merge_joints=['FL_hip_fixed','FR_hip_fixed','RL_hip_fixed','RR_hip_fixed' ]
+                  ) -> "SkeletonTree":
+        """
+        Parses a URDF robot description file and returns a Skeleton Tree.
+        We use the model attribute at the root as the name of the tree.
+        
+        :param path:
+        :type path: string
+        :return: The skeleton tree constructed from the mjcf file
+        :rtype: SkeletonTree
+        """
+        import pprint
+        pp = pprint.PrettyPrinter(indent=4)
+
+
+   
+        robot = URDF.from_xml_file(path)
+        pp.pprint(robot.child_map)
+     
+        root_link = robot.link_map[root]
+
+        node_names = []
+        parent_indices = []
+        local_translation = []
+
+        def _add_joint(link:Link, joint: Joint, parent_index, node_index):
+            #base link
+            if node_index == 0:
+                pos = np.array([0.0, 0.0, 0.0])
+
+                node_names.append(link.name)
+                parent_indices.append(parent_index)
+                local_translation.append(pos)
+
+                current_index = node_index
+                node_index += 1
+
+                for joint_name in root_traversing_order:
+                    joint = robot.joint_map[joint_name]
+                    node_index = _add_joint(None, joint, current_index, node_index)
+
+            else:
+                pos = joint.origin.position
+
+                node_names.append(joint.name)
+                parent_indices.append(parent_index)
+                local_translation.append(pos)
+
+                current_index = node_index
+                node_index += 1
+
+                if joint.child in robot.child_map.keys():
+                    child_link_joints = robot.child_map[joint.child]
+                    for joint_name, link_name in child_link_joints:
+                        if joint_name in merge_joints:
+                            j = robot.joint_map[joint_name]
+                            print(joint_name, j.origin.position)
+                            input()
+                            continue
+
+                        next_joint = robot.joint_map[joint_name]
+                        print(joint_name, next_joint.origin.position)
+                        input()
+                        next_link = robot.link_map[link_name]
+                   
+                        node_index = _add_joint(None, next_joint, current_index, node_index)
+
+            return node_index
+
+        _add_joint(root_link, None, -1, 0)
+
+        return cls(
+            node_names,
+            torch.from_numpy(np.array(parent_indices, dtype=np.int32)),
+            torch.from_numpy(np.array(local_translation, dtype=np.float32)),
+        )
+
 
     @classmethod
-    def from_mjcf(cls, path: str) -> "SkeletonTree":
+    def from_mjcf(cls, path: str, add_a1=False) -> "SkeletonTree":
         """
         Parses a mujoco xml scene description file and returns a Skeleton Tree.
         We use the model attribute at the root as the name of the tree.
@@ -189,6 +271,9 @@ class SkeletonTree(Serializable):
         if xml_world_body is None:
             raise ValueError("MJCF parsed incorrectly please verify it.")
         # assume this is the root
+        joints = xml_world_body.findall("joint")
+        print(joints)
+        input()
         xml_body_root = xml_world_body.find("body")
         if xml_body_root is None:
             raise ValueError("MJCF parsed incorrectly please verify it.")
@@ -196,6 +281,8 @@ class SkeletonTree(Serializable):
         node_names = []
         parent_indices = []
         local_translation = []
+
+        
 
         # recursively adding all nodes into the skel_tree
         def _add_xml_node(xml_node, parent_index, node_index):
@@ -207,8 +294,22 @@ class SkeletonTree(Serializable):
             local_translation.append(pos)
             curr_index = node_index
             node_index += 1
+            
+            
             for next_node in xml_node.findall("body"):
                 node_index = _add_xml_node(next_node, curr_index, node_index)
+
+            if add_a1:
+                if node_name in ["RL_calf", "RR_calf", "FR_calf", "FL_calf"]:  # Insert toes under RL_calf
+                   
+                    toe_name = node_name + '_toe'
+                    node_names.append(toe_name)
+                    parent_indices.append(curr_index)
+                    # Set local translation for each toe as needed
+                    toe_pos = np.array([0.0, 0.0, -0.2], dtype=float)
+                    local_translation.append(toe_pos)
+                    return node_index + 1
+  
             return node_index
 
         _add_xml_node(xml_body_root, -1, 0)
@@ -382,6 +483,7 @@ class SkeletonState(Serializable):
 
     @property
     def _global_rotation(self):
+
         if not self._is_local:
             return self.rotation
         else:
@@ -1197,6 +1299,7 @@ class SkeletonMotion(SkeletonState):
         fps=120,
         root_joint="",
         root_trans_index=0,
+        return_skeleton_state=False,
         *args,
         **kwargs,
     ) -> "SkeletonMotion":
@@ -1229,20 +1332,36 @@ class SkeletonMotion(SkeletonState):
                 np.swapaxes(np.array(transforms), -1, -2),
             ).float()
         )
+        # print(local_transform)
         local_rotation = transform_rotation(local_transform)
+        # print(local_rotation)
+        # input()
         root_translation = transform_translation(local_transform)[..., root_trans_index, :]
         joint_parents = torch.from_numpy(np.array(joint_parents)).int()
-
+        print(root_translation.shape)
+        print(local_rotation[:,0])
         if skeleton_tree is None:
             local_translation = transform_translation(local_transform).reshape(
                 -1, len(joint_parents), 3
             )[0]
             skeleton_tree = SkeletonTree(joint_names, joint_parents, local_translation)
+
         skeleton_state = SkeletonState.from_rotation_and_root_translation(
             skeleton_tree, r=local_rotation, t=root_translation, is_local=True
         )
+        print(len(skeleton_tree.node_names))
+        print(local_rotation.shape)
+        print(root_translation.shape)
+        input()
         if not is_local:
             skeleton_state = skeleton_state.global_repr()
+        
+        if return_skeleton_state:
+            sk_state = SkeletonState.from_rotation_and_root_translation(
+            skeleton_tree, r=local_rotation[0], t=root_translation[0], is_local=True
+        )
+            return cls.from_skeleton_state(skeleton_state=skeleton_state, fps=fps), sk_state
+
         return cls.from_skeleton_state(
             skeleton_state=skeleton_state, fps=fps
         )

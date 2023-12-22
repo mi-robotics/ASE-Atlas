@@ -226,6 +226,14 @@ class Matplotlib2DPlotter(BasePlotter):
         plt.pause(0.00001)
 
 
+
+
+
+
+
+
+
+
 class Matplotlib3DPlotter(BasePlotter):
     _fig: plt.figure  # plt figure
     _ax: p3.Axes3D  # plt 3d axis
@@ -237,7 +245,7 @@ class Matplotlib3DPlotter(BasePlotter):
 
     def __init__(self, task: "BasePlotterTask") -> None:
         self._fig = plt.figure()
-        self._ax = p3.Axes3D(self._fig)
+        self._ax = self._fig.add_subplot(111, projection='3d')#p3.Axes3D(self._fig)
         self._artist_cache = {}
 
         self._create_impl_callables = {
@@ -262,6 +270,7 @@ class Matplotlib3DPlotter(BasePlotter):
         return self._fig
 
     def show(self):
+        self._fig.canvas.draw_idle()
         plt.show()
 
     def _min(self, x, y):
@@ -321,6 +330,7 @@ class Matplotlib3DPlotter(BasePlotter):
         )
 
     def _lines_create_impl(self, lines_task):
+        print('linestask len', len(lines_task))
         color = lines_task.color
         self._artist_cache[lines_task.task_name] = [
             self._ax.plot(
@@ -343,6 +353,7 @@ class Matplotlib3DPlotter(BasePlotter):
                 self._update_lim(xs, ys, zs)
 
     def _dots_create_impl(self, dots_task):
+    
         color = dots_task.color
         self._artist_cache[dots_task.task_name] = self._ax.plot(
             dots_task[:, 0],
@@ -354,6 +365,7 @@ class Matplotlib3DPlotter(BasePlotter):
             markersize=dots_task.marker_size,
             alpha=dots_task.alpha,
         )[0]
+     
 
     def _dots_update_impl(self, dots_task):
         dots_artist = self._artist_cache[dots_task.task_name]
@@ -387,6 +399,8 @@ class Matplotlib3DPlotter(BasePlotter):
 
     def _create_impl(self, task_list):
         for task in task_list:
+            print(task.task_type)
+            print(task)
             self._create_impl_callables[task.task_type](task)
         self._draw()
 
@@ -421,4 +435,5 @@ class Matplotlib3DPlotter(BasePlotter):
         self._set_aspect_equal_3d()
         self._fig.canvas.draw()
         self._fig.canvas.flush_events()
+
         plt.pause(0.00001)
