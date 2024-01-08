@@ -195,7 +195,6 @@ class VAE(torch.nn.Module):
         # print(self.use_seperate_reconstructor)
         # quit()
 
-        self.distribution_constant = torch.log(torch.tensor([2*torch.pi], device='cuda:0'))
 
         self.encoder = Encoder(config)
 
