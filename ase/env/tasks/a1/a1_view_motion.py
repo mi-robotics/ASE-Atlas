@@ -74,13 +74,13 @@ class A1ViewMotion(A1ASE):
         super().post_physics_step()
         self._motion_sync()
         self._create_sphere()
-        time.sleep(0.1)
+        # time.sleep(0.05)
 
-        print('SIM FOOT POS')
-        print(self.feet_names)
-        print(self._rigid_body_pos[0, self._key_body_ids,:])
+        # print('SIM FOOT POS')
+        # print(self.feet_names)
+        # print(self._rigid_body_pos[0, self._key_body_ids,:])
 
-        input()
+        # input()
             
 
         #     pass
@@ -103,8 +103,6 @@ class A1ViewMotion(A1ASE):
         root_pos, root_rot, dof_pos, root_vel, root_ang_vel, dof_vel, key_pos \
            = self._motion_lib.get_motion_state(motion_ids, motion_times)
         
-        print('MOTION FOOT POS')
-        print(key_pos)
         
      
         

@@ -53,6 +53,8 @@ class A1(BaseTask):
         self._pd_control = self.cfg["env"]["pdControl"]
         self.power_scale = self.cfg["env"]["powerScale"]
 
+        self._observation_method = self.cfg['env']['obsMethod']
+
         self.debug_viz = self.cfg["env"]["enableDebugVis"]
         self.plane_static_friction = self.cfg["env"]["plane"]["staticFriction"]
         self.plane_dynamic_friction = self.cfg["env"]["plane"]["dynamicFriction"]
@@ -201,7 +203,11 @@ class A1(BaseTask):
         return
 
     def get_obs_size(self):
-        return 109#self._num_obs
+        if self._observation_method == 'max':
+            return 253
+        else:
+            return 109
+        
 
     def get_action_size(self):
         return self._num_actions
@@ -598,35 +604,37 @@ class A1(BaseTask):
     
 
     def _compute_humanoid_obs(self, env_ids=None):
-        # if (env_ids is None):
-        #     body_pos = self._rigid_body_pos
-        #     body_rot = self._rigid_body_rot
-        #     body_vel = self._rigid_body_vel
-        #     body_ang_vel = self._rigid_body_ang_vel
-        # else:
-        #     body_pos = self._rigid_body_pos[env_ids]
-        #     body_rot = self._rigid_body_rot[env_ids]
-        #     body_vel = self._rigid_body_vel[env_ids]
-        #     body_ang_vel = self._rigid_body_ang_vel[env_ids]
 
-        # obs = compute_humanoid_observations_max(body_pos, body_rot, body_vel, body_ang_vel, self._local_root_obs,
-        #                                         self._root_height_obs)
+        if self._observation_method == 'max':
+            if (env_ids is None):
+                body_pos = self._rigid_body_pos
+                body_rot = self._rigid_body_rot
+                body_vel = self._rigid_body_vel
+                body_ang_vel = self._rigid_body_ang_vel
+            else:
+                body_pos = self._rigid_body_pos[env_ids]
+                body_rot = self._rigid_body_rot[env_ids]
+                body_vel = self._rigid_body_vel[env_ids]
+                body_ang_vel = self._rigid_body_ang_vel[env_ids]
 
-        #root_pos, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos,
-                                #   local_root_obs, root_height_obs, dof_obs_size, dof_offsets, dof_frames
-        if  (env_ids is None):
-            env_ids = torch.arange(self.num_envs)
-        
-        root_pos = self._rigid_body_pos[env_ids][:,0,:]
-        root_rot = self._rigid_body_rot[env_ids][:,0,:]
-        root_vel = self._rigid_body_vel[env_ids][:,0,:]
-        root_ang_vel = self._rigid_body_ang_vel[env_ids][:,0,:]
-        dof_pos = self._dof_pos[env_ids][:,:]
-        dof_vel = self._dof_vel[env_ids][:,:]
-        key_body_pos = self._rigid_body_pos[env_ids][:, self._key_body_ids, :]
-        
-        obs = compute_humanoid_observations(root_pos, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos,
-                                            self._local_root_obs, self._root_height_obs, self._dof_obs_size, self._dof_offsets, self._dof_frames)
+            obs = compute_humanoid_observations_max(body_pos, body_rot, body_vel, body_ang_vel, self._local_root_obs,
+                                                    self._root_height_obs)
+
+        else:
+
+            if  (env_ids is None):
+                env_ids = torch.arange(self.num_envs)
+            
+            root_pos = self._rigid_body_pos[env_ids][:,0,:]
+            root_rot = self._rigid_body_rot[env_ids][:,0,:]
+            root_vel = self._rigid_body_vel[env_ids][:,0,:]
+            root_ang_vel = self._rigid_body_ang_vel[env_ids][:,0,:]
+            dof_pos = self._dof_pos[env_ids][:,:]
+            dof_vel = self._dof_vel[env_ids][:,:]
+            key_body_pos = self._rigid_body_pos[env_ids][:, self._key_body_ids, :]
+            
+            obs = compute_humanoid_observations(root_pos, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos,
+                                                self._local_root_obs, self._root_height_obs, self._dof_obs_size, self._dof_offsets, self._dof_frames)
         
      
 

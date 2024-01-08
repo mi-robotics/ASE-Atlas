@@ -45,6 +45,7 @@ class LASDAgent(ASEAgent):
 
         print(config.keys())
         self._vae_latent_dim = self.model.a2c_network.actor_vae.latent_dim
+        self._vae_beta_coef = self.model.a2c_network.actor_vae.beta
         return
     
     def calc_gradients(self, input_dict):
@@ -147,7 +148,6 @@ class LASDAgent(ASEAgent):
             enc_loss = enc_info['enc_loss']
 
             vae_loss = self._vae_loss(vae_latents, vae_params)
-            vae_coef = 0.001
 
             vae_recon_loss = self._vae_recon_loss(vae_recon, obs_batch, batch_dict['ase_latents'])
 
@@ -157,7 +157,7 @@ class LASDAgent(ASEAgent):
             print(vae_recon_loss)
 
             loss = a_loss + self.critic_coef * c_loss - self.entropy_coef * entropy + self.bounds_loss_coef * b_loss \
-                 + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss * vae_coef + vae_recon_loss*2
+                 + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss * self._vae_beta_coef + vae_recon_loss*2
             
             if (self._enable_amp_diversity_bonus()):
                 diversity_loss = self._diversity_loss(batch_dict['obs'], mu, batch_dict['ase_latents'])
