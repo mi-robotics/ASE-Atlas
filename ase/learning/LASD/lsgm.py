@@ -71,7 +71,6 @@ class LSGM(torch.nn.Module):
 
         self.vae = VAE
         self.score_model = ScoreMLP(config)
-        self.beta_sch = BetaScheduler(config)
         self.sde = VPSDE(config)
 
         self.algo_version = config['lsgm']['algo_version']
