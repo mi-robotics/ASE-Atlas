@@ -16,12 +16,14 @@ class ScoreMLP(torch.nn.Module):
         self.activation = self._get_activation(config['score_mlp']['activation'])
         self.output_activation = torch.nn.Tanh
 
+        self.input_dim = self.latent_dim + self.time_embd_dim
+
         self._build_network()
 
     
     def _build_network(self):
 
-        input_dim = self.latent_dim + self.time_embd_dim
+        input_dim = self.input_dim
         output_dim = self.latent_dim
 
         layers = []
@@ -49,9 +51,6 @@ class ScoreMLP(torch.nn.Module):
         elif activation == 'sigmoid':
             return torch.nn.Sigmoid
         
-    def _get_positional_emb(self, t):
-        
-        return 
 
     def forward(self, x, t):
 
@@ -59,7 +58,7 @@ class ScoreMLP(torch.nn.Module):
         emb_t = get_timestep_embedding(t, embed_dim=self.time_embd_dim, dtype=x.dtype)
 
         #concat latents with time embeddings
-        net_in = torch.cat([x,t], dim=1)
+        net_in = torch.cat([x,emb_t], dim=1)
 
         #get the noise predictions
         noise = self.net(net_in)
