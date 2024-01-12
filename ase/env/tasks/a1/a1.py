@@ -64,7 +64,7 @@ class A1(BaseTask):
         self._local_root_obs = self.cfg["env"]["localRootObs"]
         self._root_height_obs = self.cfg["env"].get("rootHeightObs", True)
         self._enable_early_termination = self.cfg["env"]["enableEarlyTermination"]
-        self._velocity_estimator = self.cfg["env"].get("velocityEstimator", None)
+        self._use_velocity_observation = self.cfg["env"].get("useVelocityObs", None)
 
         print('ERALY TERMINATION',self._enable_early_termination)
         
@@ -141,9 +141,9 @@ class A1(BaseTask):
         self._contact_forces = contact_force_tensor.view(self.num_envs, bodies_per_env, 3)[..., :self.num_bodies, :]
         
         #TODO: must be initializes and reset
-        self._action_history_buf = torch.zeros((self.num_envs, self.num_actions), device=self.device, dtype=torch.float)
-        self._contact_filter = torch.zeros((self.num_envs, 4), device=self.device, dtype=torch.float)
-        self._velocity_obs_buf = torch.zeros((self.num_envs, 100), device=self.device, dtype=torch.float)
+        self._action_history_buf = torch.zeros((self.num_envs, 2, self.num_actions), device=self.device, dtype=torch.float)
+        self._contact_filter = torch.zeros((self.num_envs, 2, 4), device=self.device, dtype=torch.float)
+        self._velocity_obs_buf = torch.zeros((self.num_envs, 121), device=self.device, dtype=torch.float)
 
         self._terminate_buf = torch.ones(self.num_envs, device=self.device, dtype=torch.long)
         
@@ -593,7 +593,7 @@ class A1(BaseTask):
         else:
             self.obs_buf[env_ids] = obs
 
-        if self._velocity_estimator is not None:
+        if self._use_velocity_observation is not None:
             vel_obs = self._compute_velocity_obs(env_ids)
             if (env_ids is None):
                 self._velocity_obs_buf[:] = vel_obs
@@ -658,18 +658,18 @@ class A1(BaseTask):
             root_ang_vel = self._rigid_body_ang_vel[:, 0, :]
             dof_pos = self._dof_pos
             dof_vel = self._dof_vel
-            key_body_pos = self._rigid_body_pos[:, self._key_body_ids,:]
-            action_hist = self._action_history_buf
-            contact_filter = self._contact_filter
+            key_body_pos = self._rigid_body_pos[:][:, self._key_body_ids, :]
+            action_hist = self._action_history_buf[:, 0, :]
+            contact_filter = self._contact_filter[:, 1, :]
         else:
             root_pos = self._rigid_body_pos[env_ids, 0, :]
             root_rot = self._rigid_body_rot[env_ids, 0, :]
             root_ang_vel = self._rigid_body_ang_vel[env_ids, 0, :]
             dof_pos = self._dof_pos[env_ids]
             dof_vel = self._dof_vel[env_ids]
-            key_body_pos = self._rigid_body_pos[env_ids, self._key_body_ids,:]
-            action_hist = self._action_history_buf[env_ids]
-            contact_filter = self._contact_filter[env_ids]
+            key_body_pos = self._rigid_body_pos[env_ids][:, self._key_body_ids,:]
+            action_hist = self._action_history_buf[env_ids][:, 0, :]
+            contact_filter = self._contact_filter[env_ids][:, 1,:]
 
         velocity_obs = compute_velocity_observation(
             root_pos, root_rot, root_ang_vel, dof_pos, dof_vel, key_body_pos,
@@ -714,6 +714,9 @@ class A1(BaseTask):
         # print(actions)
         if True:
             self.actions = actions.to(self.device).clone()
+            #store action in buffer and update action history
+            self._action_history_buf[:, 0, :] = self._action_history_buf[:, 1, :]
+            self._action_history_buf[:, 1, :] = actions
             if (self._pd_control):
                 pd_tar = self._action_to_pd_targets(self.actions)
                 pd_tar_tensor = gymtorch.unwrap_tensor(pd_tar)
@@ -750,6 +753,10 @@ class A1(BaseTask):
 
     def post_physics_step(self):
         self.progress_buf += 1
+
+        contact = torch.norm(self._contact_forces[:, self.feet_indices], dim=-1) > 2.
+        self._contact_filter[:,1,:] = torch.logical_or(contact, self._contact_filter[:,0,:]) 
+        self._contact_filter[:,0,:] = contact
         
         self._refresh_sim_tensors()
         self._compute_observations()
@@ -758,7 +765,7 @@ class A1(BaseTask):
 
         
         self.extras["terminate"] = self._terminate_buf
-        self.extras["velocity_est_obs"] = self._velocity_obs_buf
+        self.extras["velocity_obs"] = self._velocity_obs_buf
 
         # debug viz
         if self.viewer and self.debug_viz:

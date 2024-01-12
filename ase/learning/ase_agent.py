@@ -37,22 +37,40 @@ from rl_games.algos_torch.running_mean_std import RunningMeanStd
 from utils import torch_utils
 from learning import ase_network_builder
 from learning.modules.velocity_estimator import VelocityEstimator
+from copy import deepcopy
 
 class ASEAgent(amp_agent.AMPAgent):
     def __init__(self, base_name, config):
         super().__init__(base_name, config)
 
         self.modules = {}
-        self._env_velocity_obs = config.get('envVelocityEstimateObs', False)
-        self._train_with_velocity_estimate = config.get('trainWithVelocityEstimate', False)
-        self._optimize_with_velocity_estimate = config.get('optimizeWithVelocityEstimate', False)
-        self._use_velocity_estimator = config.get('use_velocity_estimate', False)
+        
+        try:
+            self._use_velocity_estimator = self.vec_env.env.task._use_velocity_observation
+        except:
+            self._use_velocity_estimator = False
 
         if self._use_velocity_estimator:
-            self.vel_estimator = VelocityEstimator(config['vel_estimator'])
-            self.vel_optim = torch.optim.Adam(self.vel_estimator.parameters(), config['vel_estimator']['lr'] )
+            estimator_config = config['vel_estimator']
+            self._train_with_velocity_estimate = estimator_config.get('trainWithVelocityEstimate', False) #rollouts use estimate
+            self._optimize_with_velocity_estimate = estimator_config.get('optimizeWithVelocityEstimate', False) #policy optimization uses estimate
+            self._vel_est_use_ase_latent = estimator_config.get('use_ase_latent', False)
+
+
+            input_dim = self.vec_env.env.task._velocity_obs_buf.shape[1]
+            if self._use_velocity_estimator:
+                input_dim += self._latent_dim
+
+            estimator_config.update({'input_dim':input_dim})
+   
+            self.vel_estimator = VelocityEstimator(estimator_config)
+            self.vel_estimator.to(self.ppo_device)
+            self.vel_optim = torch.optim.Adam(self.vel_estimator.parameters(), float(config['vel_estimator']['lr']) )
             self.vel_grad_norm = config['vel_estimator']['grad_norm']
             self.modules['vel_estimator'] = self.vel_estimator
+            self._vel_obs_index = (6,9)
+         
+
 
 
         return
@@ -60,9 +78,6 @@ class ASEAgent(amp_agent.AMPAgent):
     def save(self, fn):
         super().save(fn)
 
-        if self._use_velocity_estimator:
-            raise 'Not Implimented'
-        
         for mod in self.modules.keys():
             #save module wieghts
             pass
@@ -84,6 +99,14 @@ class ASEAgent(amp_agent.AMPAgent):
                                          device=self.ppo_device)
         
         self.tensor_list += ['ase_latents']
+    
+
+        if self._use_velocity_estimator:
+            self.experience_buffer.tensor_dict['velocity_obs'] = torch.zeros(batch_shape + (self.vec_env.env.task._velocity_obs_buf.shape[1],),
+                                                                dtype=torch.float32, device=self.ppo_device)
+            self.tensor_list += ['velocity_obs']
+            self.velocity_obs = torch.zeros((batch_shape[-1], self.vec_env.env.task._velocity_obs_buf.shape[1]),
+                                            dtype=torch.float32, device=self.ppo_device)
 
         self._latent_reset_steps = torch.zeros(batch_shape[-1], dtype=torch.int32, device=self.ppo_device)
         num_envs = self.vec_env.env.task.num_envs
@@ -102,9 +125,9 @@ class ASEAgent(amp_agent.AMPAgent):
         for n in range(self.horizon_length):
             self.obs = self.env_reset(done_indices)
 
-            if self._env_velocity_obs:
-                self.velocity_obs[done_indices] = self.vec_env.env.get_velocity_obs(done_indices)
-                self.experience_buffer.update_data('velocity_obs', n, infos['velocity_obs'])
+            if self._use_velocity_estimator:
+                self.velocity_obs[done_indices] = self.vec_env.env.task.get_velocity_obs(done_indices)
+                self.experience_buffer.update_data('velocity_obs', n, self.velocity_obs)
 
             self.experience_buffer.update_data('obses', n, self.obs['obs'])
 
@@ -114,11 +137,20 @@ class ASEAgent(amp_agent.AMPAgent):
                 masks = self.vec_env.get_action_masks()
                 res_dict = self.get_masked_action_values(self.obs, self._ase_latents, masks)
             else:
-                if self._train_with_velocity_estimate:
-                    velocity_est = self.vel_estimator.inference(self.velocity_obs)
-                    #TODO: replace the velocity in the observation
+                if self._use_velocity_estimator and self._train_with_velocity_estimate:
+                    
+                    vel_est_input = self.velocity_obs
+                    if self._vel_est_use_ase_latent:
+                        vel_est_input = torch.cat([vel_est_input, self._ase_latents],dim=-1)
+                    velocity_est = self.vel_estimator.inference(vel_est_input
+                                                                )
+                    #replace the velocity in the observation
+                    obs_est = deepcopy(self.obs)
+                    obs_est['obs'][:, self._vel_obs_index[0]:self._vel_obs_index[1]] = velocity_est
+                    res_dict = self.get_action_values(obs_est, self._ase_latents, self._rand_action_probs)
 
-                res_dict = self.get_action_values(self.obs, self._ase_latents, self._rand_action_probs)
+                else:
+                    res_dict = self.get_action_values(self.obs, self._ase_latents, self._rand_action_probs)
 
             for k in update_list:
                 self.experience_buffer.update_data(k, n, res_dict[k]) 
@@ -128,7 +160,7 @@ class ASEAgent(amp_agent.AMPAgent):
 
             self.obs, rewards, self.dones, infos = self.env_step(res_dict['actions'])
             
-            if self._env_velocity_obs:
+            if self._use_velocity_estimator:
                 self.velocity_obs = infos['velocity_obs']
 
             shaped_rewards = self.rewards_shaper(rewards)
@@ -225,6 +257,9 @@ class ASEAgent(amp_agent.AMPAgent):
         
         ase_latents = batch_dict['ase_latents']
         self.dataset.values_dict['ase_latents'] = ase_latents
+
+        if self._use_velocity_estimator:
+            self.dataset.values_dict['velocity_obs'] = batch_dict['velocity_obs']
         
         return
 
@@ -240,16 +275,30 @@ class ASEAgent(amp_agent.AMPAgent):
         return_batch = input_dict['returns']
         actions_batch = input_dict['actions']
         obs_batch = input_dict['obs']
-        obs_batch = self._preproc_obs(obs_batch)
+        
+        if self._use_velocity_estimator:
+            _obs = input_dict['obs'].clone()
+
+        if self._optimize_with_velocity_estimate:
+            vel_est_input = input_dict['velocity_obs']
+            if self._vel_est_use_ase_latent:
+                vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents']], dim=-1)
+            obs_batch[:, self._vel_obs_index[0]:self._vel_obs_index[1]] = self.vel_estimator.inference(vel_est_input)
 
         if self._use_velocity_estimator:
-            velocity_obs = input_dict['velocity_obs']
-            velocity_gt = input_dict['obs'][:]
-            vel_loss = self.vel_estimator.loss(self.vel_estimator(velocity_obs), velocity_gt)
+            #Note: we do this first to prevent overwriting GT velocity with using optim with estimates
+            vel_est_input = input_dict['velocity_obs']
+            if self._vel_est_use_ase_latent:
+                vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents']], dim=-1)
+
+            velocity_gt = _obs[:, self._vel_obs_index[0]:self._vel_obs_index[1]]
+            vel_loss = self.vel_estimator.loss(self.vel_estimator(vel_est_input), velocity_gt)
             self.vel_optim.zero_grad()
             vel_loss.backward()
             torch.nn.utils.clip_grad_norm_(self.vel_estimator.parameters(), self.vel_grad_norm)
             self.vel_optim.step()
+
+        obs_batch = self._preproc_obs(obs_batch)
 
         amp_obs = input_dict['amp_obs'][0:self._amp_minibatch_size]
         amp_obs = self._preproc_amp_obs(amp_obs)
@@ -380,12 +429,14 @@ class ASEAgent(amp_agent.AMPAgent):
             'kl': kl_dist,
             'last_lr': self.last_lr, 
             'lr_mul': lr_mul, 
-            'b_loss': b_loss
+            'b_loss': b_loss,
         }
         self.train_result.update(a_info)
         self.train_result.update(c_info)
         self.train_result.update(disc_info)
         self.train_result.update(enc_info)
+        if self._use_velocity_estimator:
+            self.train_result.update({'velocity_est_loss': vel_loss})
 
         return
     
@@ -580,6 +631,9 @@ class ASEAgent(amp_agent.AMPAgent):
         super()._log_train_info(train_info, frame)
         
         self.writer.add_scalar('losses/enc_loss', torch_ext.mean_list(train_info['enc_loss']).item(), frame)
+
+        if self._use_velocity_estimator:
+            self.writer.add_scalar('losses/velocity_est_loss', torch_ext.mean_list(train_info['velocity_est_loss']).item(), frame)
          
         if (self._enable_amp_diversity_bonus()):
             self.writer.add_scalar('losses/amp_diversity_loss', torch_ext.mean_list(train_info['amp_diversity_loss']).item(), frame)

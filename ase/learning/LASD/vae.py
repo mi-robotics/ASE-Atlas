@@ -188,13 +188,9 @@ class VAE(torch.nn.Module):
         
         self.beta = config['vae'].get('beta', 0.001)
         self.latent_dim = config['vae']['latent_dim']
+
         self.recon_method = config['vae']['recon']
         self.use_seperate_reconstructor = config['vae']['use_seperate_reconstructor']
-
-        # print('constructor method')
-        # print(self.use_seperate_reconstructor)
-        # quit()
-
 
         self.encoder = Encoder(config)
 

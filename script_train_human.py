@@ -13,7 +13,7 @@ command = 'python ase/run.py \
     --task HumanoidAMP \
     --cfg_env ase/data/cfg/humanoid_ase_sword_shield.yaml \
     --cfg_train ase/data/cfg/train/rlg/lasd_humanoid.yaml \
-    --motion_file ase/data/motions/reallusion_sword_shield/reallusion_1.yaml\
+    --motion_file ase/data/motions/reallusion_sword_shield/dataset_reallusion_sword_shield.yaml\
     --headless'
 
 

@@ -74,7 +74,7 @@ class A1ViewMotion(A1ASE):
         super().post_physics_step()
         self._motion_sync()
         self._create_sphere()
-        # time.sleep(0.05)
+        time.sleep(0.01)
 
         # print('SIM FOOT POS')
         # print(self.feet_names)
@@ -133,7 +133,7 @@ class A1ViewMotion(A1ASE):
         contact_positions = self._rigid_body_pos[:, self.feet_indices]
         
     
-        self.gym.fetch_results(self.sim, True)
+        # self.gym.fetch_results(self.sim, True)
         self.gym.clear_lines(self.viewer)
 
         sphere_rot = gymapi.Quat.from_euler_zyx(0.5 * math.pi, 0, 0)

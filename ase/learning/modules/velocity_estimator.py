@@ -13,7 +13,7 @@ class VelocityEstimator(nn.Module):
 
         self.input_dim = config['input_dim']
         output_dim = config['output_dim']
-        activation = get_activation(config['activation'])
+        activation = get_activation('elu')
         hidden_dims = config['units']
 
         estimator_layers = []
