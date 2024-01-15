@@ -231,6 +231,7 @@ class ASEAgent(amp_agent.AMPAgent):
 
     def get_action_values(self, obs_dict, ase_latents, rand_action_probs, critic_obs = None):
         processed_obs = self._preproc_obs(obs_dict['obs'])
+        processed_critic_obs = None
         if critic_obs is not None:
             processed_critic_obs = self._preproc_obs(critic_obs)
 
