@@ -133,10 +133,16 @@ class ASEBuilder(amp_network_builder.AMPBuilder):
             obs = obs_dict['obs']
             ase_latents = obs_dict['ase_latents']
             states = obs_dict.get('rnn_states', None)
+            critic_obs = obs_dict.get('critic_obs', None )
+
             use_hidden_latents = obs_dict.get('use_hidden_latents', False)
 
             actor_outputs = self.eval_actor(obs, ase_latents, use_hidden_latents)
-            value = self.eval_critic(obs, ase_latents, use_hidden_latents)
+            
+            if critic_obs is not None:
+                value = self.eval_critic(critic_obs, ase_latents, use_hidden_latents)
+            else:
+                value = self.eval_critic(obs, ase_latents, use_hidden_latents)
 
             output = actor_outputs + (value, states)
 

@@ -53,7 +53,7 @@ params:
   load_checkpoint: False
 
   config:
-    name: ase_a1_velEst_asym_opt
+    name: ase_a1_OFFICIAL_train_vel_est
     env_name: rlgpu
     multi_gpu: False
     ppo: True
@@ -69,7 +69,7 @@ params:
     lr_schedule: constant
     kl_threshold: 0.01
     score_to_win: 20000
-    max_epochs: 100000
+    max_epochs: 25000
     save_best_after: 50
     save_frequency: 50
     print_stats: True
@@ -122,7 +122,7 @@ params:
       output_dim: 3
       units: [128, 64]
       grad_norm: 1.0
-      trainWithVelocityEstimate: True
-      optimizeWithVelocityEstimate: True
+      trainWithVelocityEstimate: False
+      optimizeWithVelocityEstimate: False
       use_ase_latent: True
-      use_asymetric: True
+      use_asymetric: False

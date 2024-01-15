@@ -55,7 +55,7 @@ class ASEAgent(amp_agent.AMPAgent):
             self._train_with_velocity_estimate = estimator_config.get('trainWithVelocityEstimate', False) #rollouts use estimate
             self._optimize_with_velocity_estimate = estimator_config.get('optimizeWithVelocityEstimate', False) #policy optimization uses estimate
             self._vel_est_use_ase_latent = estimator_config.get('use_ase_latent', False)
-
+            self._vel_est_asymetric_train = estimator_config.get('use_asymetric', False)
 
             input_dim = self.vec_env.env.task._velocity_obs_buf.shape[1]
             if self._use_velocity_estimator:
@@ -67,8 +67,9 @@ class ASEAgent(amp_agent.AMPAgent):
             self.vel_estimator.to(self.ppo_device)
             self.vel_optim = torch.optim.Adam(self.vel_estimator.parameters(), float(config['vel_estimator']['lr']) )
             self.vel_grad_norm = config['vel_estimator']['grad_norm']
-            self.modules['vel_estimator'] = self.vel_estimator
             self._vel_obs_index = (6,9)
+
+            self.modules['VelocityEstimator'] = self.vel_estimator
          
 
 
@@ -80,6 +81,7 @@ class ASEAgent(amp_agent.AMPAgent):
 
         for mod in self.modules.keys():
             #save module wieghts
+            torch.save(self.modules[mod].state_dict(), f'{fn}_{mod}.pth')
             pass
 
     def restore(self, fn):
@@ -96,6 +98,9 @@ class ASEAgent(amp_agent.AMPAgent):
                                                                 dtype=torch.float32, device=self.ppo_device)
         
         self._ase_latents = torch.zeros((batch_shape[-1], self._latent_dim), dtype=torch.float32,
+                                         device=self.ppo_device)
+        
+        self._ase_latents_prev = torch.zeros((batch_shape[-1], self._latent_dim), dtype=torch.float32,
                                          device=self.ppo_device)
         
         self.tensor_list += ['ase_latents']
@@ -147,7 +152,12 @@ class ASEAgent(amp_agent.AMPAgent):
                     #replace the velocity in the observation
                     obs_est = deepcopy(self.obs)
                     obs_est['obs'][:, self._vel_obs_index[0]:self._vel_obs_index[1]] = velocity_est
-                    res_dict = self.get_action_values(obs_est, self._ase_latents, self._rand_action_probs)
+
+                    if self._vel_est_asymetric_train:
+                        critic_obs = deepcopy(self.obs['obs'])
+                        res_dict = self.get_action_values(obs_est, self._ase_latents, self._rand_action_probs, critic_obs=critic_obs)
+                    else:
+                        res_dict = self.get_action_values(obs_est, self._ase_latents, self._rand_action_probs)
 
                 else:
                     res_dict = self.get_action_values(self.obs, self._ase_latents, self._rand_action_probs)
@@ -219,8 +229,10 @@ class ASEAgent(amp_agent.AMPAgent):
 
         return batch_dict
 
-    def get_action_values(self, obs_dict, ase_latents, rand_action_probs):
+    def get_action_values(self, obs_dict, ase_latents, rand_action_probs, critic_obs = None):
         processed_obs = self._preproc_obs(obs_dict['obs'])
+        if critic_obs is not None:
+            processed_critic_obs = self._preproc_obs(critic_obs)
 
         self.model.eval()
         input_dict = {
@@ -228,7 +240,8 @@ class ASEAgent(amp_agent.AMPAgent):
             'prev_actions': None, 
             'obs' : processed_obs,
             'rnn_states' : self.rnn_states,
-            'ase_latents': ase_latents
+            'ase_latents': ase_latents,
+            'critic_obs': processed_critic_obs
         }
 
         with torch.no_grad():
@@ -275,7 +288,8 @@ class ASEAgent(amp_agent.AMPAgent):
         return_batch = input_dict['returns']
         actions_batch = input_dict['actions']
         obs_batch = input_dict['obs']
-        
+        critic_obs = None
+
         if self._use_velocity_estimator:
             _obs = input_dict['obs'].clone()
 
@@ -283,7 +297,12 @@ class ASEAgent(amp_agent.AMPAgent):
             vel_est_input = input_dict['velocity_obs']
             if self._vel_est_use_ase_latent:
                 vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents']], dim=-1)
+
             obs_batch[:, self._vel_obs_index[0]:self._vel_obs_index[1]] = self.vel_estimator.inference(vel_est_input)
+
+            if self._vel_est_asymetric_train:
+                critic_obs = _obs
+
 
         if self._use_velocity_estimator:
             #Note: we do this first to prevent overwriting GT velocity with using optim with estimates
@@ -299,6 +318,8 @@ class ASEAgent(amp_agent.AMPAgent):
             self.vel_optim.step()
 
         obs_batch = self._preproc_obs(obs_batch)
+        if critic_obs is not None:
+            critic_obs = self._preproc_obs(critic_obs)
 
         amp_obs = input_dict['amp_obs'][0:self._amp_minibatch_size]
         amp_obs = self._preproc_amp_obs(amp_obs)
@@ -329,7 +350,8 @@ class ASEAgent(amp_agent.AMPAgent):
             'amp_obs' : amp_obs,
             'amp_obs_replay' : amp_obs_replay,
             'amp_obs_demo' : amp_obs_demo,
-            'ase_latents': ase_latents
+            'ase_latents': ase_latents,
+            'critic_obs':critic_obs
         }
 
         rnn_masks = None
