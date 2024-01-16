@@ -2,13 +2,13 @@ params:
   seed: -1
 
   algo:
-    name: ase
+    name: lasd
 
   model:
-    name: ase
+    name: lasd
 
   network:
-    name: ase
+    name: lasd
     separate: True
 
     space:
@@ -22,6 +22,21 @@ params:
           val: -2.9
         fixed_sigma: True
         learn_sigma: False
+
+    
+    vae:
+      beta: 2
+      latent_dim: 64
+      activation: relu
+      recon_skill: True
+      recon_state: False
+      recon_next_state: True
+      use_mean_eval: True
+      use_seperate_reconstructor: False
+      encoder:
+        units: [1024, 1024, 512]
+      decoder:
+        units: [1024, 1024, 512]
 
     mlp:
       units: [1024, 1024, 512]
@@ -48,12 +63,10 @@ params:
       initializer:
         name: default
 
-  
-
   load_checkpoint: False
 
   config:
-    name: ase_a1_OFFICIAL_asymetric
+    name: vae_joined_skill_next_state
     env_name: rlgpu
     multi_gpu: False
     ppo: True
@@ -67,9 +80,8 @@ params:
     tau: 0.95
     learning_rate: 2e-5
     lr_schedule: constant
-    kl_threshold: 0.01
     score_to_win: 20000
-    max_epochs: 25000
+    max_epochs: 50000
     save_best_after: 50
     save_frequency: 50
     print_stats: True
@@ -98,7 +110,7 @@ params:
     normalize_amp_input: True
     enable_eps_greedy: True
 
-    latent_dim: 24 # 64
+    latent_dim: 64
     latent_steps_min: 1
     latent_steps_max: 150
     
@@ -115,14 +127,3 @@ params:
     task_reward_w: 0.0
     disc_reward_w: 0.5
     enc_reward_w: 0.5
-
-    vel_estimator:
-      name: vel_estimator
-      lr: 1e-4
-      output_dim: 3
-      units: [128, 64]
-      grad_norm: 1.0
-      trainWithVelocityEstimate: True
-      optimizeWithVelocityEstimate: True
-      use_ase_latent: True
-      use_asymetric: True

@@ -4,10 +4,10 @@
 
 # Request a number of GPU cards, in this case 2 (the maximum)
 #$ -l gpu=true
-#$ gpu_type=p100
+#$ gpu_type=rtx6000
 
 # Request ten minutes of wallclock time (format hours:minutes:seconds).
-#$ -l h_rt=0:10:0
+#$ -l h_rt=2:0:0
 
 # Request 1 gigabyte of RAM (must be an integer followed by M, G, or T)
 #$ -l mem=24G
@@ -17,7 +17,7 @@
 #$ -l tmpfs=15G
 
 # Set the name of the job.
-#$ -N ASE_TEST_01
+#$ -N ASE_RUN_01
 
 # Set the working directory to somewhere in your scratch space.
 # Replace "<your_UCL_id>" with your UCL user ID :)
@@ -25,14 +25,12 @@
 
 # Change into temporary directory to run work
 cd $TMPDIR
-
-# load the cuda module (in case you are running a CUDA program)
-module unload compilers mpi
-module load compilers/gnu/4.9.2
-module load cuda/7.5.18/gnu-4.9.2
+cd isaac_gym
+bash run_isaac.sh
+cd ase
 
 # Run the application - the line below is just a random example.
-mygpucode
+python script_train_human.py
 
 # 10. Preferably, tar-up (archive) all output files onto the shared scratch area
 tar zcvf $HOME/Scratch/files_from_job_$JOB_ID.tar.gz $TMPDIR

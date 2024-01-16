@@ -60,8 +60,10 @@ class LASDAgent(ASEAgent):
         return_batch = input_dict['returns']
         actions_batch = input_dict['actions']
         obs_batch = input_dict['obs']
+        next_obs_batch = input_dict['next_obses']
 
         obs_batch = self._preproc_obs(obs_batch)
+        next_obs_batch = self._preproc_obs(next_obs_batch)
 
         amp_obs = input_dict['amp_obs'][0:self._amp_minibatch_size]
         amp_obs = self._preproc_amp_obs(amp_obs)
@@ -149,7 +151,7 @@ class LASDAgent(ASEAgent):
 
             vae_loss = self._vae_loss(vae_latents, vae_params)
 
-            vae_recon_loss = self._vae_recon_loss(vae_recon, obs_batch, batch_dict['ase_latents'])
+            vae_recon_loss = self._vae_recon_loss(vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
 
             print('vae loss')
             print(vae_loss)
@@ -221,8 +223,8 @@ class LASDAgent(ASEAgent):
         #KL loss - to be computers
         return self.model.a2c_network.actor_vae.kl_loss(latents, params)
     
-    def _vae_recon_loss(self, vae_recon, obs, ase_latents):
-        return self.model.a2c_network.actor_vae.recon_loss(vae_recon, obs, ase_latents)
+    def _vae_recon_loss(self, vae_recon, ase_latents, obs, next_obs):
+        return self.model.a2c_network.actor_vae.recon_loss(vae_recon, ase_latents, obs, next_obs)
 
     def _diversity_loss(self, obs, action_params, ase_latents):
         assert(self.model.a2c_network.is_continuous)

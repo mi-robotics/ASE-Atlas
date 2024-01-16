@@ -87,7 +87,9 @@ class Decoder(torch.nn.Module):
 
         self.action_dims = config['num_actions']
         self.latent_dims = config['vae']['latent_dim']
-        self.recon_method = config['vae']['recon']
+        self.recon_skill = config['vae']['recon_skill']
+        self.recon_state = config['vae']['recon_state']
+        self.recon_next_state = config['vae']['recon_next_state']
 
         self.obs_dim = config['obs_shape'][0]        
         self.skill_latent_dim = config['ase_latent_shape'][0]
@@ -100,7 +102,7 @@ class Decoder(torch.nn.Module):
         if type == 'actor':
             self.output_dim = self.action_dims
         elif type == 'recon':
-            self.output_dim = self.skill_latent_dim + (self.obs_dim if self.recon_method == 'skill+obs' else 0)
+            self.output_dim = self.skill_latent_dim + (self.obs_dim if self.recon_state or self.recon_next_state else 0)
         else:
             raise Exception('VAE Decdoer Miss configured type')
         
@@ -126,7 +128,10 @@ class MultiHeadDecoder(torch.nn.Module):
 
         self.action_dims = config['num_actions']
         self.latent_dims = config['vae']['latent_dim']
-        self.recon_method = config['vae']['recon']
+
+        self.recon_skill = config['vae']['recon_skill']
+        self.recon_state = config['vae']['recon_state']
+        self.recon_next_state = config['vae']['recon_next_state']
 
         self.obs_dim = config['obs_shape'][0]        
         self.skill_latent_dim = config['ase_latent_shape'][0]
@@ -138,7 +143,7 @@ class MultiHeadDecoder(torch.nn.Module):
         
         
         self.actor_output_dim = self.action_dims
-        self.recon_output_dim = self.skill_latent_dim + (self.obs_dim if self.recon_method == 'skill+obs' else 0)
+        self.recon_output_dim = self.skill_latent_dim + (self.obs_dim if self.recon_state or self.recon_next_state else 0)
         
         net_config = {
             'units':self.units[:-1],
@@ -189,7 +194,9 @@ class VAE(torch.nn.Module):
         self.beta = config['vae'].get('beta', 0.001)
         self.latent_dim = config['vae']['latent_dim']
 
-        self.recon_method = config['vae']['recon']
+        self.recon_skill = config['vae']['recon_skill']
+        self.recon_state = config['vae']['recon_state']
+        self.recon_next_state = config['vae']['recon_next_state']
         self.use_seperate_reconstructor = config['vae']['use_seperate_reconstructor']
 
         self.encoder = Encoder(config)
@@ -219,13 +226,19 @@ class VAE(torch.nn.Module):
         mu, log_var = params.chunk(2, dim=-1)
         return torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
     
-    def recon_loss(self, recon, obs, ase_latents):
-        if self.recon_method == 'skill':
-            target = ase_latents
-        elif self.recon_method == 'skill+obs':
-            target = torch.cat([obs, ase_latents], dim=-1)
-        else:
-            raise Exception('VAE Recon Loss error')
+    def recon_loss(self, recon, ase_latents, obs=None, next_obs=None):
+        target = []
+        
+        if self.recon_state and self.recon_next_state:
+            raise Exception('Incorrect vae configuration')
+        if self.recon_state:
+            target.append(obs)
+        if self.recon_next_state:
+            target.append(next_obs)
+        if self.recon_skill:
+            target.append(ase_latents)
+        
+        target = torch.cat([obs, ase_latents], dim=-1)
             
         return torch.nn.functional.mse_loss( recon, target)
        

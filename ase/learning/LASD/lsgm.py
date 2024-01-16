@@ -69,7 +69,7 @@ class LSGM(torch.nn.Module):
 
         self.config = config
 
-        self.vae = VAE
+        self.vae = VAE(config)
         self.score_model = ScoreMLP(config)
         self.sde = VPSDE(config)
 
@@ -78,6 +78,11 @@ class LSGM(torch.nn.Module):
         return
 
     
+
+    def forward_algo2(self, obs, skill_latents):
+        action_mu, latents, params, reconstruction = self.vae(obs, skill_latents)
+        
+        return
 
     def forward(self, x):
         return
