@@ -145,6 +145,8 @@ class A1(BaseTask):
         self._contact_filter = torch.zeros((self.num_envs, 2, 4), device=self.device, dtype=torch.float)
         self._velocity_obs_buf = torch.zeros((self.num_envs, 121), device=self.device, dtype=torch.float)
 
+
+
         self._terminate_buf = torch.ones(self.num_envs, device=self.device, dtype=torch.long)
         
         self._build_termination_heights()
@@ -586,13 +588,16 @@ class A1(BaseTask):
         return
 
     def _compute_observations(self, env_ids=None):
-        obs = self._compute_humanoid_obs(env_ids)
+        obs, noised_obs = self._compute_humanoid_obs(env_ids)
 
         if (env_ids is None):
-            self.obs_buf[:] = obs
+            self.critic_obs_buf[:] = obs
+            self.obs_buf[:] = noised_obs
         else:
-            self.obs_buf[env_ids] = obs
+            self.critic_obs_buf[env_ids] = obs
+            self.obs_buf[env_ids] = noised_obs
 
+        #TODO: i need a better way of getting velocity obs, also this should be noised
         if self._use_velocity_observation is not None:
             vel_obs = self._compute_velocity_obs(env_ids)
             if (env_ids is None):
@@ -603,6 +608,45 @@ class A1(BaseTask):
         return
     
 
+    def _get_noised_measurements(self, dof_pos, dof_vel, ang_vel, root_rot ):
+        """
+        class noise:
+        add_noise = False
+        noise_level = 1.0 # scales other values
+        quantize_height = True
+        class noise_scales:
+            rotation = 0.0
+            dof_pos = 0.01
+            dof_vel = 0.05
+            lin_vel = 0.05
+            ang_vel = 0.05
+            gravity = 0.02 / rotation
+            height_measurements = 0.02
+
+        """
+        def sample_noise(x, scale):
+            (2.0 * torch.rand_like(x) - 1) * scale * self.a1_cfg.noise.noise_level
+
+        _dof_pos = dof_pos + sample_noise(dof_pos, self.a1_cfg.noise.noise_scales.dof_pos)
+        _dof_vel = dof_vel + sample_noise(dof_vel, self.a1_cfg.noise.noise_scales.dof_vel)
+        # _lin_vel = lin_vel + sample_noise(lin_vel, self.a1_cfg.noise.noise_scales.lin_vel)
+        _ang_vel = dof_pos + sample_noise(ang_vel, self.a1_cfg.noise.noise_scales.ang_vel)
+
+        # Extract components
+        w, v = root_rot[:, 0], root_rot[:, 1:]
+        angles = 2 * torch.acos(w)
+        axis = v / torch.sin(angles/2).unsqueeze(1)
+
+        _angles = angles + sample_noise(angles, self.a1_cfg.noise.noise_scales.gravity)
+        
+        #TODO: Replace this with func - Q form angle axis
+        new_w = torch.cos(_angles / 2)
+        new_v = axis * torch.sin(_angles / 2).unsqueeze(1)
+        _root_rot = torch.cat((new_w.unsqueeze(1), new_v), dim=1)
+
+        return _dof_pos, _dof_vel, _ang_vel, _root_rot
+    
+ 
     def _compute_humanoid_obs(self, env_ids=None):
 
         if self._observation_method == 'max':
@@ -621,7 +665,6 @@ class A1(BaseTask):
                                                     self._root_height_obs)
 
         else:
-
             if  (env_ids is None):
                 env_ids = torch.arange(self.num_envs)
             
@@ -635,10 +678,19 @@ class A1(BaseTask):
             
             obs = compute_humanoid_observations(root_pos, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos,
                                                 self._local_root_obs, self._root_height_obs, self._dof_obs_size, self._dof_offsets, self._dof_frames)
-        
-     
+            
+            
+            _dof_pos, _dof_vel, _root_ang_vel, _root_rot = self._get_noised_measurements(dof_pos, dof_vel, root_ang_vel, root_rot)
 
-        return obs
+
+            if self.a1_cfg.noise.add_noise:
+                #Note we are not noising the feet positions, if we want to do this we have to use a kinematic solver
+                noise_obs = compute_humanoid_observations(root_pos, _root_rot, root_vel, _root_ang_vel, _dof_pos, _dof_vel, key_body_pos,
+                                                    self._local_root_obs, self._root_height_obs, self._dof_obs_size, self._dof_offsets, self._dof_frames)
+            else:
+                noise_obs = obs.clone()
+            
+        return obs, noise_obs
 
     def _compute_velocity_obs(self, env_ids=None):
         """
@@ -875,10 +927,7 @@ def dof_to_obs(pose, dof_obs_size, dof_offsets, dof_frames):
         if (dof_size == 3):
             joint_pose_q = torch_utils.exp_map_to_quat(joint_pose)
         elif (dof_size == 1):
-            #TODO this could be the fucker
-            # axis = torch.tensor([0.0, 1.0, 0.0], dtype=joint_pose.dtype, device=pose.device)
-        
-            # joint_pose_q = quat_from_angle_axis(joint_pose[..., 0], axis)
+      
             axis = dof_frames[0,j]
             joint_pose_q = quat_from_angle_axis(joint_pose[...,0], axis)
 

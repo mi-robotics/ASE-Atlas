@@ -92,6 +92,10 @@ class ASEAgent(amp_agent.AMPAgent):
 
     def init_tensors(self):
         super().init_tensors()
+
+        #enable critic observations
+        self.experience_buffer.tensor_dict['critic_obs'] = torch.zeros_like(self.experience_buffer.tensor_dict['obses'])
+        self.tensor_list += ['critic_obs']
         
         batch_shape = self.experience_buffer.obs_base_shape
         self.experience_buffer.tensor_dict['ase_latents'] = torch.zeros(batch_shape + (self._latent_dim,),
@@ -105,7 +109,7 @@ class ASEAgent(amp_agent.AMPAgent):
         
         self.tensor_list += ['ase_latents']
     
-
+        
         if self._use_velocity_estimator:
             self.experience_buffer.tensor_dict['velocity_obs'] = torch.zeros(batch_shape + (self.vec_env.env.task._velocity_obs_buf.shape[1],),
                                                                 dtype=torch.float32, device=self.ppo_device)
@@ -128,13 +132,14 @@ class ASEAgent(amp_agent.AMPAgent):
         update_list = self.update_list
 
         for n in range(self.horizon_length):
-            self.obs = self.env_reset(done_indices)
+            self.critic_obs, self.obs = self.env_reset(done_indices)
 
             if self._use_velocity_estimator:
                 self.velocity_obs[done_indices] = self.vec_env.env.task.get_velocity_obs(done_indices)
                 self.experience_buffer.update_data('velocity_obs', n, self.velocity_obs)
 
             self.experience_buffer.update_data('obses', n, self.obs['obs'])
+            self.experience_buffer.update_data('critic_obs', n, self.critic_obs)
 
             self._update_latents()
 
@@ -144,18 +149,19 @@ class ASEAgent(amp_agent.AMPAgent):
             else:
                 if self._use_velocity_estimator and self._train_with_velocity_estimate:
                     
+                    #use the velocity observations to predict the noise 
                     vel_est_input = self.velocity_obs
                     if self._vel_est_use_ase_latent:
                         vel_est_input = torch.cat([vel_est_input, self._ase_latents],dim=-1)
-                    velocity_est = self.vel_estimator.inference(vel_est_input
-                                                                )
+                    velocity_est = self.vel_estimator.inference(vel_est_input)
+
                     #replace the velocity in the observation
                     obs_est = deepcopy(self.obs)
                     obs_est['obs'][:, self._vel_obs_index[0]:self._vel_obs_index[1]] = velocity_est
 
                     if self._vel_est_asymetric_train:
-                        critic_obs = deepcopy(self.obs['obs'])
-                        res_dict = self.get_action_values(obs_est, self._ase_latents, self._rand_action_probs, critic_obs=critic_obs)
+                        #use the un-noised / no estimate critic observation to get action values
+                        res_dict = self.get_action_values(obs_est, self._ase_latents, self._rand_action_probs, critic_obs=self.critic_obs)
                     else:
                         res_dict = self.get_action_values(obs_est, self._ase_latents, self._rand_action_probs)
 
@@ -168,7 +174,7 @@ class ASEAgent(amp_agent.AMPAgent):
             if self.has_central_value:
                 self.experience_buffer.update_data('states', n, self.obs['states'])
 
-            self.obs, rewards, self.dones, infos = self.env_step(res_dict['actions'])
+            self.critic_obs, self.obs, rewards, self.dones, infos = self.env_step(res_dict['actions'])
             
             if self._use_velocity_estimator:
                 self.velocity_obs = infos['velocity_obs']
@@ -176,7 +182,7 @@ class ASEAgent(amp_agent.AMPAgent):
             shaped_rewards = self.rewards_shaper(rewards)
 
             self.experience_buffer.update_data('rewards', n, shaped_rewards)
-            self.experience_buffer.update_data('next_obses', n, self.obs['obs'])
+            self.experience_buffer.update_data('next_obses', n, self.obs['obs']) #TODO: next obs is used for the value prediction, should this used the privilleged obs
             self.experience_buffer.update_data('dones', n, self.dones)
             self.experience_buffer.update_data('amp_obs', n, infos['amp_obs'])
             self.experience_buffer.update_data('ase_latents', n, self._ase_latents)
@@ -271,6 +277,7 @@ class ASEAgent(amp_agent.AMPAgent):
         
         ase_latents = batch_dict['ase_latents']
         self.dataset.values_dict['ase_latents'] = ase_latents
+        self.dataset.values_dict['critic_obs'] = batch_dict['critic_obs']
 
         if self._use_velocity_estimator:
             self.dataset.values_dict['velocity_obs'] = batch_dict['velocity_obs']
@@ -302,7 +309,7 @@ class ASEAgent(amp_agent.AMPAgent):
             obs_batch[:, self._vel_obs_index[0]:self._vel_obs_index[1]] = self.vel_estimator.inference(vel_est_input)
 
             if self._vel_est_asymetric_train:
-                critic_obs = _obs
+                critic_obs = input_dict['critic_obs']
 
 
         if self._use_velocity_estimator:
@@ -311,7 +318,7 @@ class ASEAgent(amp_agent.AMPAgent):
             if self._vel_est_use_ase_latent:
                 vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents']], dim=-1)
 
-            velocity_gt = _obs[:, self._vel_obs_index[0]:self._vel_obs_index[1]]
+            velocity_gt = critic_obs[:, self._vel_obs_index[0]:self._vel_obs_index[1]]
             vel_loss = self.vel_estimator.loss(self.vel_estimator(vel_est_input), velocity_gt)
             self.vel_optim.zero_grad()
             vel_loss.backward()

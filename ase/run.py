@@ -143,15 +143,15 @@ class RLGPUEnv(vecenv.IVecEnv):
         return
 
     def step(self, action):
-        next_obs, reward, is_done, info = self.env.step(action)
+        critic_obs, next_obs, reward, is_done, info = self.env.step(action)
 
         # todo: improve, return only dictinary
         self.full_state["obs"] = next_obs
         if self.use_global_obs:
             self.full_state["states"] = self.env.get_state()
-            return self.full_state, reward, is_done, info
+            return critic_obs, self.full_state, reward, is_done, info
         else:
-            return self.full_state["obs"], reward, is_done, info
+            return critic_obs, self.full_state["obs"], reward, is_done, info
 
     def reset(self, env_ids=None):
         self.full_state["obs"] = self.env.reset(env_ids)
