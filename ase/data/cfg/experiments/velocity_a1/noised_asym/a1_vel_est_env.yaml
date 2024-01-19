@@ -8,6 +8,7 @@ env:
   
   useVelocityObs: True
   useNoiseyMeasurements: True
+  noiseLevel: 1.0
   obsMethod: standard # max, standard
   pdControl: True
   powerScale: 1.0

@@ -66,6 +66,7 @@ class A1(BaseTask):
         self._enable_early_termination = self.cfg["env"]["enableEarlyTermination"]
         self._use_velocity_observation = self.cfg["env"].get("useVelocityObs", None)
         self._use_noisey_measurement = self.cfg["env"].get("useNoiseyMeasurements", False)
+        self._noise_level = self.cfg["env"].get("noiseLevel", 1.0)
 
         print('ERALY TERMINATION',self._enable_early_termination)
         
@@ -626,7 +627,7 @@ class A1(BaseTask):
 
         """
         def sample_noise(x, scale):
-            return (2.0 * torch.rand_like(x) - 1) * scale * self.a1_cfg.noise.noise_level
+            return (2.0 * torch.rand_like(x) - 1) * scale * self._noise_level
 
         _dof_pos = dof_pos + sample_noise(dof_pos, self.a1_cfg.noise.noise_scales.dof_pos)
         _dof_vel = dof_vel + sample_noise(dof_vel, self.a1_cfg.noise.noise_scales.dof_vel)
