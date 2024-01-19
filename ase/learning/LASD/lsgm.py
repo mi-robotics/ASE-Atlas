@@ -10,6 +10,8 @@ class VPSDE():
     def __init__(self, config):
 
         self.N = config['lsgm']['vpsde']['N']
+        self.eps_t = config['lsgm']['vpsde']['eps_t']
+        self.sigma2_0 = config['lsgm']['vpsde']['sigma2_0'] #TODO: waht should this be
         self.beta_0 = config['lsgm']['vpsde']['beta_min']
         self.beta_1 = config['lsgm']['vpsde']['beta_max']
 
@@ -27,7 +29,7 @@ class VPSDE():
     
     def sde(self, x, t):
         beta_t = self.beta_0 + t*(self.beta_1-self.beta_0) #get the continuous beta
-        drift = -0.5*beta_t[:, None] * x #reshape betas for data dim
+        drift = -0.5 * beta_t[:, None] * x #reshape betas for data dim
         diffusion = torch.sqrt(beta_t) #nosie scale, continuous G
         return drift, diffusion
     
@@ -37,6 +39,17 @@ class VPSDE():
         std = torch.sqrt(1. - torch.exp(2. * log_mean_coeff))
         return mean, std
     
+    def var(self, t):
+        log_mean_coeff = -0.25 * t ** 2 (self.beta_1 - self.beta_0) - 0.5 *t * self.beta_0
+        return 1. - torch.exp(2. * log_mean_coeff)
+    
+    def inv_var(self, var):
+        c = torch.log((1 - var) / (1 - self.sigma2_0))
+        a = self.beta_end - self.beta_start
+        t = (-self.beta_start + torch.sqrt(np.square(self.beta_start) - 2 * a * c)) / a
+        return t
+       
+
     def prior_sampling(self, shape):
         return torch.randn(*shape)
         
@@ -57,8 +70,32 @@ class VPSDE():
         g = sqrt_beta
         
         return f, g
-
     
+    def sample_q_t(self, x, mean, var, noise):
+        return mean * x + torch.sqrt(var) * noise 
+        
+
+    def iw_logl_uniform(self, latents):
+        t = torch.rand(latents.shape[0], device=latents.device) * (1. - self.eps_t) + self.eps_t
+        g2 = self.sde.sde(torch.zeros_like(latents), t)[1] ** 2
+        mean, std = self.marginal_prob(torch.zeros_like(latents), t)
+        return t, mean, std, g2 
+    
+    def iw_logl_importance_sampling(self, latents):
+        
+        ones = torch.ones_like(latents, device=latents.device)
+        sigma2_1, sigma2_eps = self.var(ones), self.var(ones*self.eps_t)
+        log_sigma2_1, log_sigma2_eps = torch.log(sigma2_1), torch.log(sigma2_eps)
+
+        r = torch.rand_like(latents, device=latents.device)
+        var_t = torch.exp(r * log_sigma2_1 + (1-r) * log_sigma2_eps)
+        t = self.inv_var(var_t)
+        mean, std = self.marginal_prob(latents, t) 
+        g2 = self.sde.sde(torch.zeros_like(latents), t)[1] ** 2
+
+        return t, mean, std, g2
+    
+  
 
 
 
@@ -78,10 +115,35 @@ class LSGM(torch.nn.Module):
         return
 
     
+    def vae_loss_algo2(self, latents, params, reconstruction):
+        """
+        recon + sudo kl (neg_entropy)
+        """
 
-    def forward_algo2(self, obs, skill_latents):
-        action_mu, latents, params, reconstruction = self.vae(obs, skill_latents)
-        
+        # get log q
+
+        # sum for the negative log entropy
+
+        # compute recontruction loss
+
+        # -----
+
+        # sample z_T
+        noise = torch.randn(size=latents.size())
+
+        #apply diffussion steps
+
+
+        return
+
+    def vae_forward_algo2(self, obs, skill_latents):
+        return self.vae(obs, skill_latents)
+    
+    def score_loss_algo2(self):
+        return
+
+    def score_forward_algo2():
+
         return
 
     def forward(self, x):
