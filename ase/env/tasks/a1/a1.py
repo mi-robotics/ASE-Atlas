@@ -65,6 +65,7 @@ class A1(BaseTask):
         self._root_height_obs = self.cfg["env"].get("rootHeightObs", True)
         self._enable_early_termination = self.cfg["env"]["enableEarlyTermination"]
         self._use_velocity_observation = self.cfg["env"].get("useVelocityObs", None)
+        self._use_noisey_measurement = self.cfg["env"].get("useNoiseyMeasurements", False)
 
         print('ERALY TERMINATION',self._enable_early_termination)
         
@@ -608,7 +609,7 @@ class A1(BaseTask):
         return
     
 
-    def _get_noised_measurements(self, dof_pos, dof_vel, ang_vel, root_rot ):
+    def _get_noised_measurements(self, dof_pos, dof_vel, ang_vel, root_rot, foot_pos ):
         """
         class noise:
         add_noise = False
@@ -616,7 +617,7 @@ class A1(BaseTask):
         quantize_height = True
         class noise_scales:
             rotation = 0.0
-            dof_pos = 0.01
+            dof_pos = 0.01 - 0
             dof_vel = 0.05
             lin_vel = 0.05
             ang_vel = 0.05
@@ -625,12 +626,13 @@ class A1(BaseTask):
 
         """
         def sample_noise(x, scale):
-            (2.0 * torch.rand_like(x) - 1) * scale * self.a1_cfg.noise.noise_level
+            return (2.0 * torch.rand_like(x) - 1) * scale * self.a1_cfg.noise.noise_level
 
         _dof_pos = dof_pos + sample_noise(dof_pos, self.a1_cfg.noise.noise_scales.dof_pos)
         _dof_vel = dof_vel + sample_noise(dof_vel, self.a1_cfg.noise.noise_scales.dof_vel)
         # _lin_vel = lin_vel + sample_noise(lin_vel, self.a1_cfg.noise.noise_scales.lin_vel)
-        _ang_vel = dof_pos + sample_noise(ang_vel, self.a1_cfg.noise.noise_scales.ang_vel)
+        _ang_vel = ang_vel + sample_noise(ang_vel, self.a1_cfg.noise.noise_scales.ang_vel)
+        _foot_pos = foot_pos + sample_noise(foot_pos, self.a1_cfg.noise.noise_scales.feet_pos)
 
         # Extract components
         w, v = root_rot[:, 0], root_rot[:, 1:]
@@ -644,7 +646,7 @@ class A1(BaseTask):
         new_v = axis * torch.sin(_angles / 2).unsqueeze(1)
         _root_rot = torch.cat((new_w.unsqueeze(1), new_v), dim=1)
 
-        return _dof_pos, _dof_vel, _ang_vel, _root_rot
+        return _dof_pos, _dof_vel, _ang_vel, _root_rot, _foot_pos
     
  
     def _compute_humanoid_obs(self, env_ids=None):
@@ -680,12 +682,12 @@ class A1(BaseTask):
                                                 self._local_root_obs, self._root_height_obs, self._dof_obs_size, self._dof_offsets, self._dof_frames)
             
             
-            _dof_pos, _dof_vel, _root_ang_vel, _root_rot = self._get_noised_measurements(dof_pos, dof_vel, root_ang_vel, root_rot)
 
 
-            if self.a1_cfg.noise.add_noise:
+            if self._use_noisey_measurement:
+                _dof_pos, _dof_vel, _root_ang_vel, _root_rot, _key_body_pos = self._get_noised_measurements(dof_pos, dof_vel, root_ang_vel, root_rot, key_body_pos)
                 #Note we are not noising the feet positions, if we want to do this we have to use a kinematic solver
-                noise_obs = compute_humanoid_observations(root_pos, _root_rot, root_vel, _root_ang_vel, _dof_pos, _dof_vel, key_body_pos,
+                noise_obs = compute_humanoid_observations(root_pos, _root_rot, root_vel, _root_ang_vel, _dof_pos, _dof_vel, _key_body_pos,
                                                     self._local_root_obs, self._root_height_obs, self._dof_obs_size, self._dof_offsets, self._dof_frames)
             else:
                 noise_obs = obs.clone()
@@ -722,6 +724,9 @@ class A1(BaseTask):
             key_body_pos = self._rigid_body_pos[env_ids][:, self._key_body_ids,:]
             action_hist = self._action_history_buf[env_ids][:, 0, :]
             contact_filter = self._contact_filter[env_ids][:, 1,:]
+
+        if self._use_noisey_measurement:
+            dof_pos, dof_vel, root_ang_vel, root_rot, key_body_pos = self._get_noised_measurements(dof_pos, dof_vel, root_ang_vel, root_rot, key_body_pos)
 
         velocity_obs = compute_velocity_observation(
             root_pos, root_rot, root_ang_vel, dof_pos, dof_vel, key_body_pos,

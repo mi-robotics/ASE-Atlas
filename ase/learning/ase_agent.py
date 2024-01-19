@@ -67,7 +67,7 @@ class ASEAgent(amp_agent.AMPAgent):
             self.vel_estimator.to(self.ppo_device)
             self.vel_optim = torch.optim.Adam(self.vel_estimator.parameters(), float(config['vel_estimator']['lr']) )
             self.vel_grad_norm = config['vel_estimator']['grad_norm']
-            self._vel_obs_index = (6,9)
+            self._vel_obs_index = (7,10)
 
             self.modules['VelocityEstimator'] = self.vel_estimator
          
@@ -132,14 +132,14 @@ class ASEAgent(amp_agent.AMPAgent):
         update_list = self.update_list
 
         for n in range(self.horizon_length):
-            self.critic_obs, self.obs = self.env_reset(done_indices)
+            self.obs = self.env_reset(done_indices)
 
             if self._use_velocity_estimator:
                 self.velocity_obs[done_indices] = self.vec_env.env.task.get_velocity_obs(done_indices)
                 self.experience_buffer.update_data('velocity_obs', n, self.velocity_obs)
 
             self.experience_buffer.update_data('obses', n, self.obs['obs'])
-            self.experience_buffer.update_data('critic_obs', n, self.critic_obs)
+            self.experience_buffer.update_data('critic_obs', n, self.obs['critic_obs'])
 
             self._update_latents()
 
@@ -161,7 +161,7 @@ class ASEAgent(amp_agent.AMPAgent):
 
                     if self._vel_est_asymetric_train:
                         #use the un-noised / no estimate critic observation to get action values
-                        res_dict = self.get_action_values(obs_est, self._ase_latents, self._rand_action_probs, critic_obs=self.critic_obs)
+                        res_dict = self.get_action_values(obs_est, self._ase_latents, self._rand_action_probs, critic_obs=self.obs['critic_obs'])
                     else:
                         res_dict = self.get_action_values(obs_est, self._ase_latents, self._rand_action_probs)
 
@@ -169,12 +169,13 @@ class ASEAgent(amp_agent.AMPAgent):
                     res_dict = self.get_action_values(self.obs, self._ase_latents, self._rand_action_probs)
 
             for k in update_list:
+                #default: updates values 
                 self.experience_buffer.update_data(k, n, res_dict[k]) 
 
             if self.has_central_value:
                 self.experience_buffer.update_data('states', n, self.obs['states'])
 
-            self.critic_obs, self.obs, rewards, self.dones, infos = self.env_step(res_dict['actions'])
+            self.obs, rewards, self.dones, infos = self.env_step(res_dict['actions'])
             
             if self._use_velocity_estimator:
                 self.velocity_obs = infos['velocity_obs']
@@ -182,7 +183,7 @@ class ASEAgent(amp_agent.AMPAgent):
             shaped_rewards = self.rewards_shaper(rewards)
 
             self.experience_buffer.update_data('rewards', n, shaped_rewards)
-            self.experience_buffer.update_data('next_obses', n, self.obs['obs']) #TODO: next obs is used for the value prediction, should this used the privilleged obs
+            self.experience_buffer.update_data('next_obses', n, self.obs['critic_obs']) #TODO: next obs is used for the value prediction, should this used the privilleged obs
             self.experience_buffer.update_data('dones', n, self.dones)
             self.experience_buffer.update_data('amp_obs', n, infos['amp_obs'])
             self.experience_buffer.update_data('ase_latents', n, self._ase_latents)
@@ -190,8 +191,8 @@ class ASEAgent(amp_agent.AMPAgent):
 
             terminated = infos['terminate'].float()
             terminated = terminated.unsqueeze(-1)
-            next_vals = self._eval_critic(self.obs, self._ase_latents)
-            next_vals *= (1.0 - terminated)
+            next_vals = self._eval_critic(self.obs['critic_obs'], self._ase_latents)
+            next_vals *= (1.0 - terminated) #TODO: next obs is used for the value prediction, should this used the privilleged obs
             self.experience_buffer.update_data('next_values', n, next_vals)
 
             self.current_rewards += rewards
@@ -472,7 +473,7 @@ class ASEAgent(amp_agent.AMPAgent):
     
     def env_reset(self, env_ids=None):
         obs = super().env_reset(env_ids)
-        
+   
         if (env_ids is None):
             num_envs = self.vec_env.env.task.num_envs
             env_ids = to_torch(np.arange(num_envs), dtype=torch.long, device=self.ppo_device)
@@ -545,9 +546,8 @@ class ASEAgent(amp_agent.AMPAgent):
         output = self.model.a2c_network.eval_actor(obs=obs, ase_latents=ase_latents)
         return output
 
-    def _eval_critic(self, obs_dict, ase_latents):
+    def _eval_critic(self, obs, ase_latents):
         self.model.eval()
-        obs = obs_dict['obs']
         processed_obs = self._preproc_obs(obs)
         value = self.model.a2c_network.eval_critic(processed_obs, ase_latents)
 

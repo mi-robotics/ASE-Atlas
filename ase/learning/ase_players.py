@@ -33,6 +33,7 @@ from rl_games.algos_torch import players
 
 from learning import amp_players
 from learning import ase_network_builder
+from learning.modules.velocity_estimator import VelocityEstimator
 
 class ASEPlayer(amp_players.AMPPlayerContinuous):
     def __init__(self, config):
@@ -41,7 +42,7 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         self._latent_steps_max = config.get('latent_steps_max', np.inf)
 
         self._enc_reward_scale = config['enc_reward_scale']
-
+        
         super().__init__(config)
         
         if (hasattr(self, 'env')):
@@ -50,7 +51,46 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
             batch_size = self.env_info['num_envs']
         self._ase_latents = torch.zeros((batch_size, self._latent_dim), dtype=torch.float32,
                                          device=self.device)
+        
+        self.modules = {}
+        
+        try:
+            self._use_velocity_estimator = self.vec_env.env.task._use_velocity_observation
+        except:
+            self._use_velocity_estimator = False
 
+        if self._use_velocity_estimator:
+            estimator_config = config['vel_estimator']
+            self._train_with_velocity_estimate = estimator_config.get('trainWithVelocityEstimate', False) #rollouts use estimate
+            self._optimize_with_velocity_estimate = estimator_config.get('optimizeWithVelocityEstimate', False) #policy optimization uses estimate
+            self._vel_est_use_ase_latent = estimator_config.get('use_ase_latent', False)
+            self._vel_est_asymetric_train = estimator_config.get('use_asymetric', False)
+
+            input_dim = self.vec_env.env.task._velocity_obs_buf.shape[1]
+            if self._use_velocity_estimator:
+                input_dim += self._latent_dim
+
+            estimator_config.update({'input_dim':input_dim})
+   
+            self.vel_estimator = VelocityEstimator(estimator_config)
+            self.vel_estimator.to(self.ppo_device)
+            self.vel_optim = torch.optim.Adam(self.vel_estimator.parameters(), float(config['vel_estimator']['lr']) )
+            self.vel_grad_norm = config['vel_estimator']['grad_norm']
+            self._vel_obs_index = (7,10)
+
+            self.modules['VelocityEstimator'] = self.vel_estimator
+         
+
+        return
+    
+    def restore(self, fn):
+        super().restore(fn)
+        
+        path = fn.split('.pth')[0]
+
+        for mod in self.modules.keys():
+            mod_path = f'{path}_{mod}.pth'
+            self.modules[mod].load_state_dict(torch.load(mod_path))
         return
 
     def run(self):

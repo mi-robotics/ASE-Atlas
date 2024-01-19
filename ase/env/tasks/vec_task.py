@@ -93,6 +93,7 @@ class VecTaskCPU(VecTask):
 class VecTaskGPU(VecTask):
     def __init__(self, task, rl_device, clip_observations=5.0, clip_actions=1.0):
         super().__init__(task, rl_device, clip_observations=clip_observations, clip_actions=clip_actions)
+       
 
         self.obs_tensor = gymtorch.wrap_tensor(self.task.obs_tensor, counts=(self.task.num_envs, self.task.num_obs))
         self.rewards_tensor = gymtorch.wrap_tensor(self.task.rewards_tensor, counts=(self.task.num_envs,))
@@ -122,6 +123,9 @@ class VecTaskPython(VecTask):
 
     def get_state(self):
         return torch.clamp(self.task.states_buf, -self.clip_obs, self.clip_obs).to(self.rl_device)
+    
+    def get_critic_obs(self):
+        return self.task.critic_obs_buf
 
     def step(self, actions):
         actions_tensor = torch.clamp(actions, -self.clip_actions, self.clip_actions)
@@ -129,7 +133,6 @@ class VecTaskPython(VecTask):
         self.task.step(actions_tensor)
 
         return (
-            torch.clamp(self.task.critic_obs_buf, -self.clip_obs, self.clip_obs).to(self.rl_device), #critic_obs
             torch.clamp(self.task.obs_buf, -self.clip_obs, self.clip_obs).to(self.rl_device), #obs
             self.task.rew_buf.to(self.rl_device), #rewards
             self.task.reset_buf.to(self.rl_device), #reset
@@ -137,13 +140,12 @@ class VecTaskPython(VecTask):
         )
 
     def reset(self):
+       
         actions = 0.01 * (1 - 2 * torch.rand([self.task.num_envs, self.task.num_actions], dtype=torch.float32, device=self.rl_device))
 
         # step the simulator
         self.task.step(actions)
 
-        return (
-            torch.clamp(self.task.critic_obs_buf, -self.clip_obs, self.clip_obs).to(self.rl_device), #critic_obs
-            torch.clamp(self.task.obs_buf, -self.clip_obs, self.clip_obs).to(self.rl_device), #obs
-            )
+        return torch.clamp(self.task.obs_buf, -self.clip_obs, self.clip_obs).to(self.rl_device), #obs
+            
     

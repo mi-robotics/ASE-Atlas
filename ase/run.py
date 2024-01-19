@@ -134,7 +134,7 @@ class RLGPUAlgoObserver(AlgoObserver):
 class RLGPUEnv(vecenv.IVecEnv):
     def __init__(self, config_name, num_actors, **kwargs):
         self.env = env_configurations.configurations[config_name]['env_creator'](**kwargs)
-        self.use_global_obs = (self.env.num_states > 0)
+        self.use_global_obs = True
 
         self.full_state = {}
         self.full_state["obs"] = self.reset()
@@ -143,20 +143,21 @@ class RLGPUEnv(vecenv.IVecEnv):
         return
 
     def step(self, action):
-        critic_obs, next_obs, reward, is_done, info = self.env.step(action)
+        next_obs, reward, is_done, info = self.env.step(action)
 
         # todo: improve, return only dictinary
         self.full_state["obs"] = next_obs
         if self.use_global_obs:
-            self.full_state["states"] = self.env.get_state()
-            return critic_obs, self.full_state, reward, is_done, info
+            self.full_state["critic_obs"] = self.env.get_critic_obs()
+            return self.full_state, reward, is_done, info
         else:
-            return critic_obs, self.full_state["obs"], reward, is_done, info
+            return self.full_state["obs"], reward, is_done, info
 
     def reset(self, env_ids=None):
         self.full_state["obs"] = self.env.reset(env_ids)
+       
         if self.use_global_obs:
-            self.full_state["states"] = self.env.get_state()
+            self.full_state["critic_obs"] = self.env.get_critic_obs()
             return self.full_state
         else:
             return self.full_state["obs"]
