@@ -2,6 +2,7 @@ import torch
 import numpy as np
 from score_model import ScoreMLP
 from vae import VAE
+from distributions import Normal
 
 #NOTE: assuming single dimensional data
 
@@ -20,6 +21,8 @@ class VPSDE():
         self.alphas_cumprod = torch.cumprod(self.alphas, dim=0)
         self.sqrt_alphas_cumprod = torch.sqrt(self.alphas_cumprod)
         self.sqrt_1m_alphas_cumprod = torch.sqrt(1. - self.alphas_cumprod)
+
+        self.loss_constant = 0.5 * (1.0 + torch.log(2.0 * np.pi * self.var(t=torch.tensor(self.eps_t, device='cuda'))))
         
         return
 
@@ -71,8 +74,8 @@ class VPSDE():
         
         return f, g
     
-    def sample_q_t(self, x, mean, var, noise):
-        return mean * x + torch.sqrt(var) * noise 
+    def sample_q_t(self, x, mean, std, noise):
+        return mean * x + std * noise 
         
 
     def iw_logl_uniform(self, latents):
@@ -105,46 +108,85 @@ class LSGM(torch.nn.Module):
         super().__init__()
 
         self.config = config
+        self._latent_dim = config['vae']['latent_dim']
+        self._used_mixed_predictions = config['lsgm']['used_mixed_predictions']
+
+        self._mixing_logit = None
+        if self._used_mixed_predictions:
+            init = config['lsgm']['mixed_logit_init']
+            init = init*torch.ones((1, self._latent_dim))
+            self._mixing_logit = torch.nn.Parameter(init, requires_grad=True)
 
         self.vae = VAE(config)
         self.score_model = ScoreMLP(config)
         self.sde = VPSDE(config)
 
         self.algo_version = config['lsgm']['algo_version']
+
+
         
         return
+    
+    def get_mixed_prediction(self, noised_latents, std, pred):
+        alpha = torch.sigmoid(self._mixing_logit)
+        mixer = std * noised_latents
+        pred = (1-alpha) * mixer + alpha * pred
+        return pred
 
     
     def vae_loss_algo2(self, latents, params, reconstruction):
         """
         recon + sudo kl (neg_entropy)
+        TODO: Ensure we do not update the diffussion network 
+        TODO: Ensure the vae is getting gradients from the diffussion network
         """
-
+        # --------------- VAE LOSS TERMS
         # get log q
-
+        mu, log_var = params.chunk(2, dim=-1)
+        dist = Normal(mu, log_var)
+        log_prob_q = dist.log_p(latents)
+        
         # sum for the negative log entropy
 
         # compute recontruction loss
 
-        # -----
+        # --------------- SCORE LOSS TERMS
 
         # sample z_T
-        noise = torch.randn(size=latents.size())
+        noise_T = torch.randn(size=latents.size())
 
         #apply diffussion steps
+        t, mean, std, g2 = self.sde.iw_logl_importance_sampling(latents)
 
+        #sample noised latetents
+        noised_latents = self.sde.sample_q_t(latents, mean, std, noise_T )
 
+        #the model predictions
+        pred = self.score_model.forward(noised_latents, t)
+        if self._used_mixed_predictions:
+            pred = self.get_mixed_prediction(noised_latents, std, pred)
+
+        #calc diffussion based loss terms 
+        l2_term = torch.square(params - noise_T)
+        #TODO we need to get the wieghting term
+        cross_entropy = 0 # w * l2_term
+        cross_entropy += self.sde.loss_constant
+        cross_entropy = torch.sum(cross_entropy, dim=1)
+
+        #TODO: remaining_neg_log_p_total
+        kl = #vae_neg_entropy + cross_entropy
+        nelbo_loss = None #kl_coeff * kl + vae_recon_loss
+        regularizer = None
+
+        q_loss = torch.mean(nelbo_loss) + regularizer
+        return
+    
+    def score_loss_algo2(self):
         return
 
     def vae_forward_algo2(self, obs, skill_latents):
         return self.vae(obs, skill_latents)
     
-    def score_loss_algo2(self):
-        return
-
-    def score_forward_algo2():
-
-        return
 
     def forward(self, x):
         return

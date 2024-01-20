@@ -52,13 +52,13 @@ class ScoreMLP(torch.nn.Module):
             return torch.nn.Sigmoid
         
 
-    def forward(self, x, t):
+    def forward(self, noised_latent, t):
 
         #get positional embeddings
         emb_t = get_timestep_embedding(t, embed_dim=self.time_embd_dim, dtype=x.dtype)
 
         #concat latents with time embeddings
-        net_in = torch.cat([x,emb_t], dim=1)
+        net_in = torch.cat([noised_latent,emb_t], dim=1)
 
         #get the noise predictions
         noise = self.net(net_in)
