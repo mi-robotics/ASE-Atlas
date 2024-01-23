@@ -30,10 +30,20 @@ import torch
 
 from isaacgym.torch_utils import *
 from rl_games.algos_torch import players
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 
 from learning import amp_players
 from learning import ase_network_builder
 from learning.modules.velocity_estimator import VelocityEstimator
+
+ASE_LATENT_FIXING = torch.Tensor([[-0.0583, -0.2628, -0.0631, -0.0972,  0.1531,  0.1208,  0.2005, -0.3900,
+         -0.0791, -0.2718, -0.5174, -0.1158,  0.2162,  0.0113,  0.1427,  0.0029,
+         -0.2820,  0.0700,  0.2520,  0.0654, -0.1332,  0.1135, -0.0670, -0.2607]]).cuda()
+
+ASE_LATENT_FIXING = None
+
+PLOT_MEASUREMENTS = True
 
 class ASEPlayer(amp_players.AMPPlayerContinuous):
     def __init__(self, config):
@@ -79,9 +89,42 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
             self._vel_obs_index = (7,10)
 
             self.modules['VelocityEstimator'] = self.vel_estimator
-         
+
+        if PLOT_MEASUREMENTS:
+            # Initialize data structures for each plot
+            self.data_streams = [([], []) for _ in range(9)]
+            self.init_plots()
+            # Animate
+            ani = FuncAnimation(self.fig, self.update_plots, blit=False, interval=1000)
+            # Non-blocking show
+            plt.show(block=False)
 
         return
+    
+    def init_plots(self):
+        self.fig, self.axes = plt.subplots(3, 3, figsize=(15, 10))
+        return
+    
+    def update_data(self, obs):
+        #dof pos: one leg: FL (2)
+        #dof vel: one leg: FL (2)
+        #root_ang_vel: (3)
+        #foot pos: one leg: FL (3)
+        #total: (10)
+        # new_data should be a list of tuples/lists with 9 elements, each containing the new data for the respective plot
+        for i, data in enumerate(new_data):
+            x, y = self.data_streams[i]
+            x.append(data[0])
+            y.append(data[1])
+            self.data_streams[i] = (x, y)
+
+    def update_plots(self, frame):
+        for i, ax in enumerate(self.axes.flatten()):
+            x, y = self.data_streams[i]
+            ax.clear()
+            ax.plot(x, y)
+        plt.tight_layout()
+        
     
     def restore(self, fn):
         super().restore(fn)
@@ -101,9 +144,15 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
     def get_action(self, obs_dict, is_determenistic=False):
         self._update_latents()
 
+        print(self._ase_latents)
+
         obs = obs_dict['obs']
         if len(obs.size()) == len(self.obs_shape):
             obs = obs.unsqueeze(0)
+
+        if PLOT_MEASUREMENTS:
+            self.update_data(obs)
+
         obs = self._preproc_obs(obs)
         ase_latents = self._ase_latents
 
@@ -137,13 +186,17 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         return config
     
     def _reset_latents(self, done_env_ids=None):
-        if (done_env_ids is None):
-            num_envs = self.env.task.num_envs
-            done_env_ids = to_torch(np.arange(num_envs), dtype=torch.long, device=self.device)
 
-        rand_vals = self.model.a2c_network.sample_latents(len(done_env_ids))
-        self._ase_latents[done_env_ids] = rand_vals
-        self._change_char_color(done_env_ids)
+        if ASE_LATENT_FIXING is not None:
+            self._ase_latents = ASE_LATENT_FIXING
+        else:
+            if (done_env_ids is None):
+                num_envs = self.env.task.num_envs
+                done_env_ids = to_torch(np.arange(num_envs), dtype=torch.long, device=self.device)
+
+            rand_vals = self.model.a2c_network.sample_latents(len(done_env_ids))
+            self._ase_latents[done_env_ids] = rand_vals
+            self._change_char_color(done_env_ids)
 
         return
 

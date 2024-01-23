@@ -174,7 +174,7 @@ class LSGM(torch.nn.Module):
         cross_entropy = torch.sum(cross_entropy, dim=1)
 
         #TODO: remaining_neg_log_p_total
-        kl = #vae_neg_entropy + cross_entropy
+        kl = None #vae_neg_entropy + cross_entropy
         nelbo_loss = None #kl_coeff * kl + vae_recon_loss
         regularizer = None
 
