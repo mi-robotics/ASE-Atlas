@@ -112,7 +112,9 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         #foot pos: one leg: FL (3)
         #total: (10)
         # new_data should be a list of tuples/lists with 9 elements, each containing the new data for the respective plot
-        for i, data in enumerate(new_data):
+        
+        
+        for i, data in enumerate(obs):
             x, y = self.data_streams[i]
             x.append(data[0])
             y.append(data[1])
