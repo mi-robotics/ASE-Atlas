@@ -60,7 +60,7 @@ class CommonAgent(a2c_continuous.A2CAgent):
         self._setup_action_space()
         self.bounds_loss_coef = config.get('bounds_loss_coef', None)
         self.clip_actions = config.get('clip_actions', True)
-        self._save_intermediate = config.get('save_intermediate', False)
+        self._save_intermediate = config.get('save_intermediate', True)
 
         net_config = self._build_net_config()
         self.model = self.network.build(net_config)
@@ -170,7 +170,8 @@ class CommonAgent(a2c_continuous.A2CAgent):
                     if (epoch_num % self.save_freq == 0):
                         self.save(model_output_file)
 
-                        if (self._save_intermediate):
+                        if (self._save_intermediate and epoch_num % 1000 == 0):
+
                             int_model_output_file = model_output_file + '_' + str(epoch_num).zfill(8)
                             self.save(int_model_output_file)
 
