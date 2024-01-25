@@ -37,13 +37,13 @@ from learning import amp_players
 from learning import ase_network_builder
 from learning.modules.velocity_estimator import VelocityEstimator
 
-ASE_LATENT_FIXING = torch.Tensor([[-0.0583, -0.2628, -0.0631, -0.0972,  0.1531,  0.1208,  0.2005, -0.3900,
-         -0.0791, -0.2718, -0.5174, -0.1158,  0.2162,  0.0113,  0.1427,  0.0029,
-         -0.2820,  0.0700,  0.2520,  0.0654, -0.1332,  0.1135, -0.0670, -0.2607]]).cuda()
+# ASE_LATENT_FIXING = torch.Tensor([[-0.0583, -0.2628, -0.0631, -0.0972,  0.1531,  0.1208,  0.2005, -0.3900,
+#          -0.0791, -0.2718, -0.5174, -0.1158,  0.2162,  0.0113,  0.1427,  0.0029,
+#          -0.2820,  0.0700,  0.2520,  0.0654, -0.1332,  0.1135, -0.0670, -0.2607]]).cuda()
 
 ASE_LATENT_FIXING = None
 
-PLOT_MEASUREMENTS = True
+PLOT_MEASUREMENTS = False
 
 class ASEPlayer(amp_players.AMPPlayerContinuous):
     def __init__(self, config):
@@ -146,7 +146,7 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
     def get_action(self, obs_dict, is_determenistic=False):
         self._update_latents()
 
-        print(self._ase_latents)
+        # print(self._ase_latents)
 
         obs = obs_dict['obs']
         if len(obs.size()) == len(self.obs_shape):
