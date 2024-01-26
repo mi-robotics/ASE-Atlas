@@ -43,10 +43,15 @@ class LASDAgent(ASEAgent):
     def __init__(self, base_name, config):
         super().__init__(base_name, config)
 
-        print(config.keys())
-        self._vae_latent_dim = self.model.a2c_network.actor_vae.latent_dim
-        self._vae_beta_coef = self.model.a2c_network.actor_vae.beta
+        self._use_lsgm = self.model.a2c_network._use_lsgm
+
+        if not self._use_lsgm:
+            self._vae_altent_dim = self.model.a2c_network.actor.latent_dim
+            self._vae_beta_coef = self.model.a2c_network.actor.beta
         return
+    
+
+    
     
     def calc_gradients(self, input_dict):
 
@@ -149,17 +154,20 @@ class LASDAgent(ASEAgent):
             enc_info = self._enc_loss(enc_pred, enc_latents, batch_dict['amp_obs'], enc_loss_mask)
             enc_loss = enc_info['enc_loss']
 
-            vae_loss = self._vae_loss(vae_latents, vae_params)
 
-            vae_recon_loss = self._vae_recon_loss(vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
 
-            print('vae loss')
-            print(vae_loss)
-            print('vae recon')
-            print(vae_recon_loss)
+            if self._use_lsgm:
+                vae_loss, vae_info = self.model.a2c_network.actor.vae_loss_algo2(vae_latents, vae_params, vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
+                loss = a_loss + self.critic_coef * c_loss - self.entropy_coef * entropy + self.bounds_loss_coef * b_loss \
+                    + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss
+                
 
-            loss = a_loss + self.critic_coef * c_loss - self.entropy_coef * entropy + self.bounds_loss_coef * b_loss \
-                 + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss * self._vae_beta_coef + vae_recon_loss*2
+            else:
+                vae_kl_loss = self._vae_kl_loss(vae_latents, vae_params)
+                vae_recon_loss = self._vae_recon_loss(vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
+
+                loss = a_loss + self.critic_coef * c_loss - self.entropy_coef * entropy + self.bounds_loss_coef * b_loss \
+                    + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_kl_loss * self._vae_beta_coef + vae_recon_loss*2
             
             if (self._enable_amp_diversity_bonus()):
                 diversity_loss = self._diversity_loss(batch_dict['obs'], mu, batch_dict['ase_latents'])
@@ -177,24 +185,43 @@ class LASDAgent(ASEAgent):
                 for param in self.model.parameters():
                     param.grad = None
 
+
+
+        # |||||||||||||||| Step 1 LSGM Update ||||||||||||||||||
         self.scaler.scale(loss).backward()
-        #TODO: Refactor this ugliest code of the year
         if self.truncate_grads:
             if self.multi_gpu:
-                self.optimizer.synchronize()
-                self.scaler.unscale_(self.optimizer)
-                nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_norm)
-                with self.optimizer.skip_synchronize():
-                    self.scaler.step(self.optimizer)
-                    self.scaler.update()
+                raise Exception('Removed this code')
             else:
                 self.scaler.unscale_(self.optimizer)
                 nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_norm)
-                self.scaler.step(self.optimizer)
-                self.scaler.update()    
-        else:
+              
+        self._set_freeze_score_params(True)
+        self.scaler.step(self.optimizer)
+        self._set_freeze_score_params(False)
+
+        if self._use_lsgm:
+            # |||||||||||||||| Step 2 LSGM Update ||||||||||||||||||
+            self.optimizer.zero_grad()
+
+            score_loss = self.model.a2c_network.actor.score_loss_algo2(vae_latents)
+        
+            self.scaler.scale(score_loss).backward()
+            if self.truncate_grads:
+                if self.multi_gpu:
+                    raise Exception('Removed this code')
+                else:
+                    self.scaler.unscale_(self.optimizer)
+                    nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_norm)
+                
+            self._set_freeze_all_params(True)
+            self._set_freeze_score_params(False)
             self.scaler.step(self.optimizer)
-            self.scaler.update()
+            self._set_freeze_all_params(False)
+
+        self.scaler.update()
+
+      
 
         with torch.no_grad():
             reduce_kl = not self.is_rnn
@@ -208,9 +235,10 @@ class LASDAgent(ASEAgent):
             'last_lr': self.last_lr, 
             'lr_mul': lr_mul, 
             'b_loss': b_loss,
-            'vae_loss':vae_loss, 
-            'vae_recon_loss':vae_recon_loss
+            # 'vae_kl_loss':vae_kl_loss, TODO ----
+            # 'vae_recon_loss':vae_recon_loss
         }
+    
         self.train_result.update(a_info)
         self.train_result.update(c_info)
         self.train_result.update(disc_info)
@@ -218,13 +246,25 @@ class LASDAgent(ASEAgent):
 
         return
     
-    def _vae_loss(self, latents, params):
+    def _set_freeze_score_params(self, set_freeze):
+        if self._use_lsgm:
+            for param in self.model.a2c_network.actor.score_model.parameters():
+                param.requires_grad = set_freeze
+        return
+    
+    def _set_freeze_all_params(self, set_freeze):
+        for param in self.model.parameters():
+            param.requires_grad = set_freeze
+        return
+
+    
+    def _vae_kl_loss(self, latents, params):
         #reconstruction loss - adversarial rewards 
         #KL loss - to be computers
-        return self.model.a2c_network.actor_vae.kl_loss(latents, params)
+        return self.model.a2c_network.actor.kl_loss(latents, params)
     
     def _vae_recon_loss(self, vae_recon, ase_latents, obs, next_obs):
-        return self.model.a2c_network.actor_vae.recon_loss(vae_recon, ase_latents, obs, next_obs)
+        return self.model.a2c_network.actor.recon_loss(vae_recon, ase_latents, obs, next_obs)
 
     def _diversity_loss(self, obs, action_params, ase_latents):
         assert(self.model.a2c_network.is_continuous)
@@ -263,8 +303,9 @@ class LASDAgent(ASEAgent):
         super()._log_train_info(train_info, frame)
         
         self.writer.add_scalar('losses/enc_loss', torch_ext.mean_list(train_info['enc_loss']).item(), frame)
-        self.writer.add_scalar('losses/vae_loss', torch_ext.mean_list(train_info['vae_loss']).item(), frame)
-        self.writer.add_scalar('losses/vae_recon_loss', torch_ext.mean_list(train_info['vae_recon_loss']).item(), frame)
+        #TODO
+        # self.writer.add_scalar('losses/vae_kl_loss', torch_ext.mean_list(train_info['vae_kl_loss']).item(), frame)
+        # self.writer.add_scalar('losses/vae_recon_loss', torch_ext.mean_list(train_info['vae_recon_loss']).item(), frame)
          
         if (self._enable_amp_diversity_bonus()):
             self.writer.add_scalar('losses/amp_diversity_loss', torch_ext.mean_list(train_info['amp_diversity_loss']).item(), frame)

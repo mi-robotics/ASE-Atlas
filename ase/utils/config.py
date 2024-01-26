@@ -85,7 +85,8 @@ def load_cfg(args):
         cfg = yaml.load(f, Loader=yaml.SafeLoader)
 
     # Override number of environments if passed on the command line
-    cfg['env']['noiseLevel'] *= args.noise_level
+    if 'noiseLevel' in cfg['env'].keys():
+        cfg['env']['noiseLevel'] *= args.noise_level
     if args.num_envs > 0:
         cfg["env"]["numEnvs"] = args.num_envs
 

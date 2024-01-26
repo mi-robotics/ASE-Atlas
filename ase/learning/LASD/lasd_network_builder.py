@@ -12,6 +12,7 @@ import enum
 from learning.ase_network_builder import ASEBuilder 
 
 from .vae import VAE
+from .lsgm import LSGM
 
 ENC_LOGIT_INIT_SCALE = 0.1
 
@@ -92,7 +93,14 @@ class LASDBuilder(ASEBuilder):
             self._enc_initializer = params['enc']['initializer']
             self._enc_separate = params['enc']['separate']
 
-            self._vae_params = params['vae']
+            self._vae_params = params.get('vae', False)
+            self._lsgm_params = params.get('lsgm', False)
+
+            assert not self._vae_params and self._lsgm_params
+            assert self._vae_params or self._lsgm_params
+
+            self._use_vae = self._vae_params is not False
+            self._use_lsgm = self._lsgm_params is not False
            
 
             return
@@ -115,7 +123,7 @@ class LASDBuilder(ASEBuilder):
         def eval_actor(self, obs, ase_latents, use_hidden_latents=False):
             a_out = self.actor_cnn(obs)
             a_out = a_out.contiguous().view(a_out.size(0), -1)
-            mu, latents, params, recon = self.actor_vae(a_out, ase_latents)
+            mu, latents, params, recon = self.actor(a_out, ase_latents)
                     
             if self.is_continuous:
                 if self.space_config['fixed_sigma']:
@@ -143,13 +151,31 @@ class LASDBuilder(ASEBuilder):
             act_fn = self.activations_factory.create(self.activation)
             initializer = self.init_factory.create(**self.initializer)
 
-            vae_config = {
-                'vae':self._vae_params,
-                'num_actions':num_actions,
-                'ase_latent_shape':ase_latent_shape,
-                'obs_shape': input_shape
-            }
-            self.actor_vae = VAE(vae_config)
+            if self._use_vae:
+                vae_config = {
+                    'vae':self._vae_params,
+                    'num_actions':num_actions,
+                    'ase_latent_shape':ase_latent_shape,
+                    'obs_shape': input_shape
+                }
+                self.actor = VAE(vae_config)
+
+            elif self._use_lsgm:
+      
+                lsgm_config = {
+                    'lsgm':self._lsgm_params,
+                    'vae':self._lsgm_params['vae'],
+                    'score_model': self._lsgm_params['score_model'],
+                    'num_actions':num_actions,
+                    'ase_latent_shape':ase_latent_shape,
+                    'obs_shape': input_shape
+                }
+                self.actor = LSGM(lsgm_config)
+                pass
+
+            else:
+                raise Exception('LSGM config error')
+
 
             if self.separate:
                 self.critic_mlp = AMPMLPNet(obs_size=input_shape[-1],

@@ -9,6 +9,12 @@ def sample_normal_jit(mu, sigma):
     return z, rho
 
 
+@torch.jit.script
+def log_p_standard_normal(samples):
+    log_p = - 0.5 * torch.square(samples) - 0.9189385332  # 0.5 * np.log(2 * np.pi)
+    return log_p
+
+
 class Normal:
     def __init__(self, mu, log_sigma):
         self.mu = mu

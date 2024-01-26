@@ -7,14 +7,15 @@ import math
 class ScoreMLP(torch.nn.Module):
 
     def __init__(self, config):
+        super().__init__()
         self.config = config
 
 
         self.latent_dim = config['vae']['latent_dim']
-        self.time_embd_dim = config['score_mlp']['time_embd_dim']      
-        self.units = config['score_mlp']['units']
-        self.activation = self._get_activation(config['score_mlp']['activation'])
-        self.output_activation = torch.nn.Tanh
+        self.time_embd_dim = config['score_model']['time_embd_dim']      
+        self.units = config['score_model']['units']
+        self.activation = self._get_activation(config['score_model']['activation'])
+        self.output_activation = torch.nn.Identity()
 
         self.input_dim = self.latent_dim + self.time_embd_dim
 
@@ -45,17 +46,17 @@ class ScoreMLP(torch.nn.Module):
 
     def _get_activation(self, activation):
         if activation == 'tanh':
-            return torch.nn.Tanh
+            return torch.nn.Tanh()
         elif activation == 'relu':
-            return torch.nn.ReLU
+            return torch.nn.ReLU()
         elif activation == 'sigmoid':
-            return torch.nn.Sigmoid
+            return torch.nn.Sigmoid()
         
 
     def forward(self, noised_latent, t):
 
         #get positional embeddings
-        emb_t = get_timestep_embedding(t, embed_dim=self.time_embd_dim, dtype=x.dtype)
+        emb_t = get_timestep_embedding(t, embed_dim=self.time_embd_dim, dtype=noised_latent.dtype)
 
         #concat latents with time embeddings
         net_in = torch.cat([noised_latent,emb_t], dim=1)

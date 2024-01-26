@@ -279,6 +279,7 @@ class ASEAgent(amp_agent.AMPAgent):
         ase_latents = batch_dict['ase_latents']
         self.dataset.values_dict['ase_latents'] = ase_latents
         self.dataset.values_dict['critic_obs'] = batch_dict['critic_obs']
+        self.dataset.values_dict['next_obses'] = batch_dict['next_obses']
 
         if self._use_velocity_estimator:
             self.dataset.values_dict['velocity_obs'] = batch_dict['velocity_obs']
