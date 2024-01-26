@@ -50,16 +50,22 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         self._latent_dim = config['latent_dim']
         self._latent_steps_min = config.get('latent_steps_min', np.inf)
         self._latent_steps_max = config.get('latent_steps_max', np.inf)
+        self._obs_delay = config.get('player_obs_delay', 0)
 
         self._enc_reward_scale = config['enc_reward_scale']
         
         super().__init__(config)
+
+        
         
         if (hasattr(self, 'env')):
             batch_size = self.env.task.num_envs
         else:
             batch_size = self.env_info['num_envs']
         self._ase_latents = torch.zeros((batch_size, self._latent_dim), dtype=torch.float32,
+                                         device=self.device)
+        
+        self._obs_buffer = torch.zeros((batch_size, 3, self.env.get_env_info()['observation_space']), dtype=torch.float32,
                                          device=self.device)
         
         self.modules = {}
@@ -152,6 +158,10 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         if len(obs.size()) == len(self.obs_shape):
             obs = obs.unsqueeze(0)
 
+        self.update_observation_buffer(obs)
+
+        obs = self._obs_buffer[:, self._obs_delay]
+
         if PLOT_MEASUREMENTS:
             self.update_data(obs)
 
@@ -176,6 +186,10 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
             current_action = action
         current_action = current_action.detach()
         return  players.rescale_actions(self.actions_low, self.actions_high, torch.clamp(current_action, -1.0, 1.0))
+
+    def update_observation_buffer(self, obs):
+        self._obs_buffer[:, [1,2], :] = self._obs_buffer[:, [0,1], :]
+        self._obs_buffer[:, [0], :] = obs
 
     def env_reset(self, env_ids=None):
         obs = super().env_reset(env_ids)

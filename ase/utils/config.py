@@ -85,6 +85,13 @@ def load_cfg(args):
         cfg = yaml.load(f, Loader=yaml.SafeLoader)
 
     # Override number of environments if passed on the command line
+    if hasattr(args, 'friction_overide'):
+        cfg['env']['staticFriction'] = args.friction_overide
+        cfg['env']['dynamicFriction'] = args.friction_overide
+
+    if hasattr(args, 'use_delay'):
+        cfg_train['params']['config']['player_obs_delay'] = args.use_delay
+
     if 'noiseLevel' in cfg['env'].keys():
         cfg['env']['noiseLevel'] *= args.noise_level
     if args.num_envs > 0:
@@ -232,8 +239,15 @@ def get_args(benchmark=False):
         {"name": "--output_path", "type": str, "default": "output/", "help": "Specify output directory"},
         {"name": "--llc_checkpoint", "type": str, "default": "",
             "help": "Path to the saved weights for the low-level controller of an HRL agent."},
+        
         {"name": "--noise_level", "type": float, "default": 1.,
-            "help": "Controls how much noise to add proportionally to realistic levels"}
+            "help": "Controls how much noise to add proportionally to realistic levels"},
+       
+        {"name": "--friction_overide", "type": float, 'options':[0.1, 2.0],
+            "help": "overrides the friction terms for the environemnt"},
+        
+        {"name": "--use_delay",  "type": int, 'options':[1, 2],
+            "help": "Only effective for player scenario - testing using delays"}
             ]
 
     if benchmark:
