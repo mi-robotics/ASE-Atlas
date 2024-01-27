@@ -16,10 +16,11 @@ def log_p_standard_normal(samples):
 
 
 class Normal:
-    def __init__(self, mu, log_sigma):
+    def __init__(self, mu, log_var):
         self.mu = mu
-        self.log_sigma = log_sigma
-        self.sigma = torch.exp(log_sigma)
+        self.log_var = log_var
+        self.sigma = torch.exp(0.5*log_var)
+        self.log_sigma = torch.log(self.sigma)
 
     def sample(self, t=1.):
         return sample_normal_jit(self.mu, self.sigma * t)

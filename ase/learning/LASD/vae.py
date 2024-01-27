@@ -226,7 +226,7 @@ class VAE(torch.nn.Module):
         mu, log_var = params.chunk(2, dim=-1)
         return torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
     
-    def recon_loss(self, recon, ase_latents, obs=None, next_obs=None):
+    def recon_loss(self, recon, ase_latents, obs=None, next_obs=None, reduce=True):
         target = []
         
         if self.recon_state and self.recon_next_state:
@@ -240,7 +240,7 @@ class VAE(torch.nn.Module):
         
         target = torch.cat([obs, ase_latents], dim=-1)
             
-        return torch.nn.functional.mse_loss( recon, target)
+        return torch.nn.functional.mse_loss( recon, target, reduce=reduce)
        
     def forward(self, obs, skill_latents):
 

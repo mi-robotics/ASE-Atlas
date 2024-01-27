@@ -155,13 +155,20 @@ class LASDAgent(ASEAgent):
             enc_loss = enc_info['enc_loss']
 
 
+            gen_loss_info = {}
 
             if self._use_lsgm:
                 vae_loss, vae_info = self.model.a2c_network.actor.vae_loss_algo2(vae_latents, vae_params, vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
                 loss = a_loss + self.critic_coef * c_loss - self.entropy_coef * entropy + self.bounds_loss_coef * b_loss \
                     + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss
                 
-
+              
+                gen_loss_info = {
+                    'vae_kl': vae_info['lsgm_vae_kl_loss'].mean(),
+                    'vae_recon_loss':vae_info['lsgm_vae_recon_loss'].mean(), 
+                    'vae_loss': vae_loss
+                }
+                print(gen_loss_info)
             else:
                 vae_kl_loss = self._vae_kl_loss(vae_latents, vae_params)
                 vae_recon_loss = self._vae_recon_loss(vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
@@ -186,8 +193,16 @@ class LASDAgent(ASEAgent):
                     param.grad = None
 
 
+      
+        # model_parameters = {}
+    
+        # for name, parameter in self.model.named_parameters():
+        #     print(name)
+        #     model_parameters[name] = parameter.clone().detach().cpu().numpy()
 
+   
         # |||||||||||||||| Step 1 LSGM Update ||||||||||||||||||
+        self._set_freeze_score_params(False)
         self.scaler.scale(loss).backward()
         if self.truncate_grads:
             if self.multi_gpu:
@@ -196,16 +211,41 @@ class LASDAgent(ASEAgent):
                 self.scaler.unscale_(self.optimizer)
                 nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_norm)
               
-        self._set_freeze_score_params(True)
-        self.scaler.step(self.optimizer)
-        self._set_freeze_score_params(False)
 
+        # for name, parameter in self.model.named_parameters():
+        #     if 'score_model' in name:
+        #         try:
+        #             assert parameter.grad == None
+        #         except:
+        #             print(torch.norm(parameter.grad))
+                #should not have changes
+        
+   
+        self.scaler.step(self.optimizer)
+        self._set_freeze_score_params(True)
+
+        # for name, parameter in self.model.named_parameters():
+        #     param = parameter.clone().detach().cpu().numpy()
+        #     if 'score_model' in name or 'sigma' in name:
+        #         print((name))
+        #         #should not have changes
+        #         assert np.array_equal(model_parameters[name], param)
+        #     else:
+        #         #should have changed
+        #         print(name)
+        #         assert not np.array_equal(model_parameters[name], param)
+       
+    
         if self._use_lsgm:
             # |||||||||||||||| Step 2 LSGM Update ||||||||||||||||||
             self.optimizer.zero_grad()
 
             score_loss = self.model.a2c_network.actor.score_loss_algo2(vae_latents)
-        
+            gen_loss_info['score_loss'] = score_loss
+            
+            self._set_freeze_all_params(False)
+            self._set_freeze_score_params(True) #unfreeze the score model
+
             self.scaler.scale(score_loss).backward()
             if self.truncate_grads:
                 if self.multi_gpu:
@@ -214,10 +254,8 @@ class LASDAgent(ASEAgent):
                     self.scaler.unscale_(self.optimizer)
                     nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_norm)
                 
-            self._set_freeze_all_params(True)
-            self._set_freeze_score_params(False)
             self.scaler.step(self.optimizer)
-            self._set_freeze_all_params(False)
+            self._set_freeze_all_params(True)
 
         self.scaler.update()
 
@@ -243,6 +281,7 @@ class LASDAgent(ASEAgent):
         self.train_result.update(c_info)
         self.train_result.update(disc_info)
         self.train_result.update(enc_info)
+        self.train_result.update(gen_loss_info)
 
         return
     
@@ -304,8 +343,10 @@ class LASDAgent(ASEAgent):
         
         self.writer.add_scalar('losses/enc_loss', torch_ext.mean_list(train_info['enc_loss']).item(), frame)
         #TODO
-        # self.writer.add_scalar('losses/vae_kl_loss', torch_ext.mean_list(train_info['vae_kl_loss']).item(), frame)
-        # self.writer.add_scalar('losses/vae_recon_loss', torch_ext.mean_list(train_info['vae_recon_loss']).item(), frame)
+        self.writer.add_scalar('losses/vae_kl_loss', torch_ext.mean_list(train_info['vae_kl']).item(), frame)
+        self.writer.add_scalar('losses/vae_recon_loss', torch_ext.mean_list(train_info['vae_recon_loss']).item(), frame)
+        self.writer.add_scalar('losses/vae_loss', torch_ext.mean_list(train_info['vae_loss']).item(), frame)
+        self.writer.add_scalar('losses/score_model_loss', torch_ext.mean_list(train_info['score_loss']).item(), frame)
          
         if (self._enable_amp_diversity_bonus()):
             self.writer.add_scalar('losses/amp_diversity_loss', torch_ext.mean_list(train_info['amp_diversity_loss']).item(), frame)

@@ -149,14 +149,23 @@ class LSGM(torch.nn.Module):
         # get log q
         mu, log_var = params.chunk(2, dim=-1)
         dist = Normal(mu, log_var)
+        print('params--')
+        print(mu.mean(), mu.max())
+        print(log_var.mean(), log_var.max())
+
         log_prob_q = dist.log_p(latents)
-        cross_entropy_normal = torch.sum(-log_p_standard_normal(latents), dim=-1)
+        cross_entropy_normal_per_var = -log_p_standard_normal(latents)
+        cross_entropy_normal = torch.sum(cross_entropy_normal_per_var, dim=-1)
         
         # sum for the negative log entropy]
+        print(log_prob_q.max())
+        print(log_prob_q.mean())
+      
         neg_entropy = torch.sum(log_prob_q, dim=-1)
 
         # compute recontruction loss
-        recon_loss = self.vae.recon_loss(reconstruction, ase_latents, obs, next_obs)
+        recon_loss = self.vae.recon_loss(reconstruction, ase_latents, obs, next_obs, reduce=True)
+        # recon_loss = torch.mean(recon_loss, dim=-1)
 
         # --------------- SCORE LOSS TERMS
 
@@ -178,21 +187,35 @@ class LSGM(torch.nn.Module):
         l2_term = torch.square(pred - noise_T)
 
     
-        cross_entropy = w[:, None] * l2_term    
-        cross_entropy += self.sde.loss_constant
-        cross_entropy = torch.sum(cross_entropy, dim=1)
-        cross_entropy += cross_entropy_normal
+        cross_entropy_per_var = w[:, None] * l2_term    
+        cross_entropy_per_var += self.sde.loss_constant
+        cross_entropy_per_var += cross_entropy_normal_per_var
 
-        kl = neg_entropy + cross_entropy
-        nelbo_loss = self._kl_coeff * kl + recon_loss
+        cross_entropy = torch.sum(cross_entropy_per_var, dim=1)
+        cross_entropy += cross_entropy_normal
+        
+
+        kl = log_prob_q + cross_entropy_per_var
+        print('neg_entropy', neg_entropy.mean())
+        print('cross_entropy', cross_entropy.mean())
+        print('w', w)
+        print('const', self.sde.loss_constant)
+        print('l2', l2_term.mean())
+        print('normal', cross_entropy_normal.mean())
+        print()
+
+        print(recon_loss.shape)
+        print(kl.shape)
+        # input()
+        nelbo_loss = self._kl_coeff * kl
         # regularizer = None 
         #TODO lets add regularization in the future
 
-        vae_loss = torch.mean(nelbo_loss) 
+        vae_loss = torch.mean(nelbo_loss) + recon_loss
 
         info = {
             'lsgm_vae_kl_loss':kl,
-             'lsgm_vae_recon_loss': recon_loss
+            'lsgm_vae_recon_loss': recon_loss
         }
         
         return vae_loss, info

@@ -25,7 +25,7 @@ class ModelLASDContinuous(ModelASEContinuous):
             net_dict = self.a2c_network(input_dict)
             keys = ['mu', 'sigma', 'vae_latents', 'vae_params', 'vae_recon', 'value', 'states']
             mu, logstd, vae_latents, vae_params, vae_recon, value, states = [net_dict[key] for key in keys]
-
+           
             sigma = torch.exp(logstd)
             distr = torch.distributions.Normal(mu, sigma)
             if is_train:
