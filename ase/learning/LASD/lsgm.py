@@ -115,24 +115,15 @@ class LSGM(torch.nn.Module):
         self._used_mixed_predictions = config['lsgm']['use_mixed_predictions']
         self._kl_coeff = config['lsgm']['kl_coeff']
 
-        self._mixing_logit = None
-        if self._used_mixed_predictions:
-            init = config['lsgm']['mixed_logit_init']
-            init = init*torch.ones((1, self._latent_dim))
-            self._mixing_logit = torch.nn.Parameter(init, requires_grad=True)
-
         self.vae = VAE(config)
         self.score_model = ScoreMLP(config)
         self.sde = VPSDE(config)
 
         # self.algo_version = config['lsgm']['algo_version']
-
-
-        
         return
     
     def get_mixed_prediction(self, noised_latents, std, pred):
-        alpha = torch.sigmoid(self._mixing_logit)
+        alpha = torch.sigmoid(self.score_model._mixing_logit)
         mixer = std[:, None] * noised_latents
         pred = (1-alpha) * mixer + alpha * pred
         return pred
@@ -149,18 +140,12 @@ class LSGM(torch.nn.Module):
         # get log q
         mu, log_var = params.chunk(2, dim=-1)
         dist = Normal(mu, log_var)
-        print('params--')
-        print(mu.mean(), mu.max())
-        print(log_var.mean(), log_var.max())
 
         log_prob_q = dist.log_p(latents)
         cross_entropy_normal_per_var = -log_p_standard_normal(latents)
         cross_entropy_normal = torch.sum(cross_entropy_normal_per_var, dim=-1)
         
         # sum for the negative log entropy]
-        print(log_prob_q.max())
-        print(log_prob_q.mean())
-      
         neg_entropy = torch.sum(log_prob_q, dim=-1)
 
         # compute recontruction loss
@@ -186,9 +171,8 @@ class LSGM(torch.nn.Module):
         #calc diffussion based loss terms 
         l2_term = torch.square(pred - noise_T)
 
-    
         cross_entropy_per_var = w[:, None] * l2_term    
-        cross_entropy_per_var += self.sde.loss_constant
+        # cross_entropy_per_var += self.sde.loss_constant
         cross_entropy_per_var += cross_entropy_normal_per_var
 
         cross_entropy = torch.sum(cross_entropy_per_var, dim=1)
@@ -196,29 +180,22 @@ class LSGM(torch.nn.Module):
         
 
         kl = log_prob_q + cross_entropy_per_var
-        print('neg_entropy', neg_entropy.mean())
-        print('cross_entropy', cross_entropy.mean())
-        print('w', w)
-        print('const', self.sde.loss_constant)
-        print('l2', l2_term.mean())
-        print('normal', cross_entropy_normal.mean())
-        print()
-
-        print(recon_loss.shape)
-        print(kl.shape)
-        # input()
-        nelbo_loss = self._kl_coeff * kl
+  
+        nelbo_loss = 0.7* kl
         # regularizer = None 
         #TODO lets add regularization in the future
 
-        vae_loss = torch.mean(nelbo_loss) + recon_loss
+        l2_penalty = sum(p.pow(2.0).sum() for p in self.vae.parameters())
+
+        vae_loss = torch.mean(nelbo_loss) + recon_loss # + 0.0001*l2_penalty
+
 
         info = {
             'lsgm_vae_kl_loss':kl,
             'lsgm_vae_recon_loss': recon_loss
         }
         
-        return vae_loss, info
+        return vae_loss, recon_loss, info
     
     
     def score_loss_algo2(self, latents):
@@ -239,12 +216,13 @@ class LSGM(torch.nn.Module):
 
         #calc diffussion based loss terms 
         l2_term = torch.square(pred - noise_T) #TODO: This seems wrong
-
+        print('noise l2', l2_term.mean())
         score_objective = torch.sum(w[:,None] * l2_term, dim=[-1])
+      
+        l2_penalty = sum(p.pow(2.0).sum() for p in self.score_model.parameters())
+        score_loss = torch.mean(score_objective) #+ 0.0001*l2_penalty
 
-        score_loss = torch.mean(score_objective)
-
-        return score_loss
+        return score_loss*0.01
     
 
     def forward(self, obs, skill_latents):

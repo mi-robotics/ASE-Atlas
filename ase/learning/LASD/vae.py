@@ -238,7 +238,7 @@ class VAE(torch.nn.Module):
         if self.recon_skill:
             target.append(ase_latents)
         
-        target = torch.cat([obs, ase_latents], dim=-1)
+        target = torch.cat(target, dim=-1)
             
         return torch.nn.functional.mse_loss( recon, target, reduce=reduce)
        

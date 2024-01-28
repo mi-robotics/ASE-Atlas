@@ -641,6 +641,7 @@ class AMPAgent(common_agent.CommonAgent):
 
         disc_reward_std, disc_reward_mean = torch.std_mean(train_info['disc_rewards'])
         self.writer.add_scalar('info/disc_reward_mean', disc_reward_mean.item(), frame)
+        print( disc_reward_mean.item())
         self.writer.add_scalar('info/disc_reward_std', disc_reward_std.item(), frame)
         return
 

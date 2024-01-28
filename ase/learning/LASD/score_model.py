@@ -17,6 +17,13 @@ class ScoreMLP(torch.nn.Module):
         self.activation = self._get_activation(config['score_model']['activation'])
         self.output_activation = torch.nn.Identity()
 
+        self._used_mixed_predictions = config['lsgm']['use_mixed_predictions']
+        self._mixing_logit = None
+        if self._used_mixed_predictions:
+            init = config['lsgm']['mixed_logit_init']
+            init = init*torch.ones((1, self.latent_dim))
+            self._mixing_logit = torch.nn.Parameter(init, requires_grad=True)
+
         self.input_dim = self.latent_dim + self.time_embd_dim
 
         self._build_network()

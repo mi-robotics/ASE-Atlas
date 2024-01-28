@@ -96,7 +96,7 @@ class LASDBuilder(ASEBuilder):
             self._vae_params = params.get('vae', False)
             self._lsgm_params = params.get('lsgm', False)
 
-            assert not self._vae_params and self._lsgm_params
+            assert not( self._vae_params and self._lsgm_params)
             assert self._vae_params or self._lsgm_params
 
             self._use_vae = self._vae_params is not False

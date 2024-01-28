@@ -51,7 +51,91 @@ class LASDAgent(ASEAgent):
         return
     
 
-    
+    def play_steps(self):
+        self.set_eval()
+        
+        epinfos = []
+        done_indices = []
+        update_list = self.update_list
+
+        for n in range(self.horizon_length):
+            self.obs = self.env_reset(done_indices)
+
+            self.experience_buffer.update_data('obses', n, self.obs['obs'])
+
+            self._update_latents()
+
+            if self.use_action_masks:
+                masks = self.vec_env.get_action_masks()
+                res_dict = self.get_masked_action_values(self.obs, self._ase_latents, masks)
+            else:
+                
+                res_dict = self.get_action_values(self.obs, self._ase_latents, self._rand_action_probs)
+
+            for k in update_list:
+                #default: updates values 
+                self.experience_buffer.update_data(k, n, res_dict[k]) 
+
+            if self.has_central_value:
+                self.experience_buffer.update_data('states', n, self.obs['states'])
+
+            self.obs, rewards, self.dones, infos = self.env_step(res_dict['actions'])
+ 
+            shaped_rewards = self.rewards_shaper(rewards)
+
+            self.experience_buffer.update_data('rewards', n, shaped_rewards)
+            self.experience_buffer.update_data('next_obses', n, self.obs['obs'])
+            self.experience_buffer.update_data('dones', n, self.dones)
+            self.experience_buffer.update_data('amp_obs', n, infos['amp_obs'])
+            self.experience_buffer.update_data('ase_latents', n, self._ase_latents)
+            self.experience_buffer.update_data('rand_action_mask', n, res_dict['rand_action_mask'])
+
+            terminated = infos['terminate'].float()
+            terminated = terminated.unsqueeze(-1)
+            next_vals = self._eval_critic(self.obs['obs'], self._ase_latents)
+            next_vals *= (1.0 - terminated) 
+            self.experience_buffer.update_data('next_values', n, next_vals)
+
+            self.current_rewards += rewards
+            self.current_lengths += 1
+            all_done_indices = self.dones.nonzero(as_tuple=False)
+            done_indices = all_done_indices[::self.num_agents]
+
+            self.game_rewards.update(self.current_rewards[done_indices])
+            self.game_lengths.update(self.current_lengths[done_indices])
+            self.algo_observer.process_infos(infos, done_indices)
+
+            not_dones = 1.0 - self.dones.float()
+
+            self.current_rewards = self.current_rewards * not_dones.unsqueeze(1)
+            self.current_lengths = self.current_lengths * not_dones
+        
+            if (self.vec_env.env.task.viewer):
+                self._amp_debug(infos, self._ase_latents)
+
+            done_indices = done_indices[:, 0]
+
+        mb_fdones = self.experience_buffer.tensor_dict['dones'].float()
+        mb_values = self.experience_buffer.tensor_dict['values']
+        mb_next_values = self.experience_buffer.tensor_dict['next_values']
+        
+        mb_rewards = self.experience_buffer.tensor_dict['rewards']
+        mb_amp_obs = self.experience_buffer.tensor_dict['amp_obs']
+        mb_ase_latents = self.experience_buffer.tensor_dict['ase_latents']
+        amp_rewards = self._calc_amp_rewards(mb_amp_obs, mb_ase_latents)
+        mb_rewards = self._combine_rewards(mb_rewards, amp_rewards)
+        
+        mb_advs = self.discount_values(mb_fdones, mb_values, mb_rewards, mb_next_values)
+        mb_returns = mb_advs + mb_values
+
+        batch_dict = self.experience_buffer.get_transformed_list(a2c_common.swap_and_flatten01, self.tensor_list)
+        batch_dict['returns'] = a2c_common.swap_and_flatten01(mb_returns)
+        batch_dict['played_frames'] = self.batch_size
+
+        for k, v in amp_rewards.items():
+            batch_dict[k] = a2c_common.swap_and_flatten01(v)
+
+        return batch_dict
     
     def calc_gradients(self, input_dict):
 
@@ -158,9 +242,9 @@ class LASDAgent(ASEAgent):
             gen_loss_info = {}
 
             if self._use_lsgm:
-                vae_loss, vae_info = self.model.a2c_network.actor.vae_loss_algo2(vae_latents, vae_params, vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
+                vae_loss, vae_recon_loss, vae_info = self.model.a2c_network.actor.vae_loss_algo2(vae_latents, vae_params, vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
                 loss = a_loss + self.critic_coef * c_loss - self.entropy_coef * entropy + self.bounds_loss_coef * b_loss \
-                    + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss
+                    + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss*0.1
                 
               
                 gen_loss_info = {
@@ -194,13 +278,7 @@ class LASDAgent(ASEAgent):
 
 
       
-        # model_parameters = {}
-    
-        # for name, parameter in self.model.named_parameters():
-        #     print(name)
-        #     model_parameters[name] = parameter.clone().detach().cpu().numpy()
-
-   
+        
         # |||||||||||||||| Step 1 LSGM Update ||||||||||||||||||
         self._set_freeze_score_params(False)
         self.scaler.scale(loss).backward()
@@ -210,35 +288,20 @@ class LASDAgent(ASEAgent):
             else:
                 self.scaler.unscale_(self.optimizer)
                 nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_norm)
-              
-
-        # for name, parameter in self.model.named_parameters():
-        #     if 'score_model' in name:
-        #         try:
-        #             assert parameter.grad == None
-        #         except:
-        #             print(torch.norm(parameter.grad))
-                #should not have changes
         
    
         self.scaler.step(self.optimizer)
         self._set_freeze_score_params(True)
-
-        # for name, parameter in self.model.named_parameters():
-        #     param = parameter.clone().detach().cpu().numpy()
-        #     if 'score_model' in name or 'sigma' in name:
-        #         print((name))
-        #         #should not have changes
-        #         assert np.array_equal(model_parameters[name], param)
-        #     else:
-        #         #should have changed
-        #         print(name)
-        #         assert not np.array_equal(model_parameters[name], param)
-       
     
         if self._use_lsgm:
             # |||||||||||||||| Step 2 LSGM Update ||||||||||||||||||
             self.optimizer.zero_grad()
+
+            # model_parameters = {}
+    
+            # for name, parameter in self.model.named_parameters():
+            #     print(name)
+            #     model_parameters[name] = parameter.clone().detach().cpu().numpy()
 
             score_loss = self.model.a2c_network.actor.score_loss_algo2(vae_latents)
             gen_loss_info['score_loss'] = score_loss
@@ -256,6 +319,17 @@ class LASDAgent(ASEAgent):
                 
             self.scaler.step(self.optimizer)
             self._set_freeze_all_params(True)
+
+            # for name, parameter in self.model.named_parameters():
+            #     param = parameter.clone().detach().cpu().numpy()
+            #     if 'score_model' in name:
+            #         print((name))
+            #         #should not have changes
+            #         assert not np.array_equal(model_parameters[name], param)
+            #     else:
+            #         #should have changed
+            #         print(name)
+            #         assert np.array_equal(model_parameters[name], param)
 
         self.scaler.update()
 
@@ -343,10 +417,11 @@ class LASDAgent(ASEAgent):
         
         self.writer.add_scalar('losses/enc_loss', torch_ext.mean_list(train_info['enc_loss']).item(), frame)
         #TODO
-        self.writer.add_scalar('losses/vae_kl_loss', torch_ext.mean_list(train_info['vae_kl']).item(), frame)
-        self.writer.add_scalar('losses/vae_recon_loss', torch_ext.mean_list(train_info['vae_recon_loss']).item(), frame)
-        self.writer.add_scalar('losses/vae_loss', torch_ext.mean_list(train_info['vae_loss']).item(), frame)
-        self.writer.add_scalar('losses/score_model_loss', torch_ext.mean_list(train_info['score_loss']).item(), frame)
+        if self._use_lsgm:
+            self.writer.add_scalar('losses/vae_kl_loss', torch_ext.mean_list(train_info['vae_kl']).item(), frame)
+            self.writer.add_scalar('losses/vae_recon_loss', torch_ext.mean_list(train_info['vae_recon_loss']).item(), frame)
+            self.writer.add_scalar('losses/vae_loss', torch_ext.mean_list(train_info['vae_loss']).item(), frame)
+            self.writer.add_scalar('losses/score_model_loss', torch_ext.mean_list(train_info['score_loss']).item(), frame)
          
         if (self._enable_amp_diversity_bonus()):
             self.writer.add_scalar('losses/amp_diversity_loss', torch_ext.mean_list(train_info['amp_diversity_loss']).item(), frame)

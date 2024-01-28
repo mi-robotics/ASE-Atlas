@@ -28,7 +28,9 @@ params:
       beta: 0.01
       latent_dim: 128
       activation: relu
-      recon: skill+obs
+      recon_skill: True
+      recon_state: True
+      recon_next_state: False
       beta: 0.5
       use_mean_eval: True
       use_seperate_reconstructor: False

@@ -159,6 +159,7 @@ class CommonAgent(a2c_continuous.A2CAgent):
                         self.writer.add_scalar('rewards{0}/frame'.format(i), mean_rewards[i], frame)
                         self.writer.add_scalar('rewards{0}/iter'.format(i), mean_rewards[i], epoch_num)
                         self.writer.add_scalar('rewards{0}/time'.format(i), mean_rewards[i], total_time)
+                        print('mean rewards', mean_rewards[i], frame)
 
                     self.writer.add_scalar('episode_lengths/frame', mean_lengths, frame)
                     self.writer.add_scalar('episode_lengths/iter', mean_lengths, epoch_num)
@@ -582,7 +583,7 @@ class CommonAgent(a2c_continuous.A2CAgent):
         self.writer.add_scalar('performance/play_time', train_info['play_time'], frame)
         self.writer.add_scalar('losses/a_loss', torch_ext.mean_list(train_info['actor_loss']).item(), frame)
         self.writer.add_scalar('losses/c_loss', torch_ext.mean_list(train_info['critic_loss']).item(), frame)
-        
+        print(torch_ext.mean_list(train_info['critic_loss']).item())
         self.writer.add_scalar('losses/bounds_loss', torch_ext.mean_list(train_info['b_loss']).item(), frame)
         self.writer.add_scalar('losses/entropy', torch_ext.mean_list(train_info['entropy']).item(), frame)
         self.writer.add_scalar('info/last_lr', train_info['last_lr'][-1] * train_info['lr_mul'][-1], frame)
