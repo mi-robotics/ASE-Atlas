@@ -78,6 +78,7 @@ class Go2Transfer(A1ASE):
         print('ERALY TERMINATION',self._enable_early_termination)
         
         key_bodies = self.cfg["env"]["keyBodies"]
+        contact_bodies = self.cfg["env"]["contactBodies"]
         self._setup_character_props(key_bodies)
 
         self.cfg["env"]["numObservations"] = self.get_obs_size()
@@ -197,10 +198,9 @@ class Go2Transfer(A1ASE):
         # Adding stuff here -----------------------------------------------------------------        
         self._key_body_ids = self._build_key_body_ids_tensor(self.feet_names)
        
-        self._contact_body_ids = self._build_contact_body_ids_tensor(self.feet_names)
+        self._contact_body_ids = self._build_contact_body_ids_tensor(contact_bodies)
 
-        print(self._contact_body_ids)
-        input()
+      
         if self.viewer != None:
             self._init_camera()
 

@@ -42,7 +42,7 @@ Stephen Brawner (brawner@gmail.com)
       </geometry>
     </collision>
   </link>
-  <link
+  <!-- <link
     name="Head_upper">
     <inertial>
       <origin
@@ -66,8 +66,8 @@ Stephen Brawner (brawner@gmail.com)
         <cylinder radius="0.05" length="0.09" />
       </geometry>
     </collision>
-  </link>
-  <joint
+  </link> -->
+  <!-- <joint
     name="Head_upper_joint"
     type="fixed" dont_collapse="true">
     <origin
@@ -104,8 +104,8 @@ Stephen Brawner (brawner@gmail.com)
         <sphere radius="0.047" />
       </geometry>
     </collision>
-  </link>
-  <joint
+  </link> -->
+  <!-- <joint
     name="Head_lower_joint"
     type="fixed" dont_collapse="true">
     <origin
@@ -117,7 +117,7 @@ Stephen Brawner (brawner@gmail.com)
       link="Head_lower" />
     <axis
       xyz="0 0 0" />
-  </joint>
+  </joint> -->
   <link
     name="FL_hip">
     <inertial>

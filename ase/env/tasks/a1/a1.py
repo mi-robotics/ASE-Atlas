@@ -71,6 +71,7 @@ class A1(BaseTask):
         print('ERALY TERMINATION',self._enable_early_termination)
         
         key_bodies = self.cfg["env"]["keyBodies"]
+        contact_bodies = self.cfg["env"]["contactBodies"]
         self._setup_character_props(key_bodies)
 
         self.cfg["env"]["numObservations"] = self.get_obs_size()
@@ -189,8 +190,9 @@ class A1(BaseTask):
         # Adding stuff here -----------------------------------------------------------------
         
         self._key_body_ids = self._build_key_body_ids_tensor(self.feet_names)
+
        
-        self._contact_body_ids = self._build_contact_body_ids_tensor(self.feet_names)
+        self._contact_body_ids = self._build_contact_body_ids_tensor(contact_bodies)
 
         if self.viewer != None:
             self._init_camera()
@@ -343,6 +345,7 @@ class A1(BaseTask):
         # save body names from the asset
 
         body_names = self.gym.get_asset_rigid_body_names(robot_asset)
+        print(body_names)
         self.torso_index = 0
         self.dof_names = self.gym.get_asset_dof_names(robot_asset)
   
@@ -540,6 +543,10 @@ class A1(BaseTask):
                 lim_low[dof_offset] = curr_low
                 lim_high[dof_offset] =  curr_high
 
+                print(j)
+                print(lim_low[dof_offset], lim_high[dof_offset])
+
+        input()
         # mid range of the limits
         self._pd_action_offset = 0.5 * (lim_high + lim_low)
         # max direction either side of the limits from the mid
@@ -562,6 +569,9 @@ class A1(BaseTask):
                                                    self._contact_forces, self._contact_body_ids,
                                                    self._rigid_body_pos, self.max_episode_length,
                                                    self._enable_early_termination, self._termination_heights)
+        
+        print(self._terminate_buf)
+        input()
         return
     
     def _get_ground_penetration(self):
@@ -1079,7 +1089,7 @@ def compute_humanoid_reset(reset_buf, progress_buf, contact_buf, contact_body_id
         masked_contact_buf[:, contact_body_ids, :] = 0
         fall_contact = torch.any(torch.abs(masked_contact_buf) > 0.1, dim=-1)
         fall_contact = torch.any(fall_contact, dim=-1)
- 
+
         body_height = rigid_body_pos[..., 2]
         fall_height = body_height < termination_heights
         fall_height[:, contact_body_ids] = False
@@ -1090,6 +1100,7 @@ def compute_humanoid_reset(reset_buf, progress_buf, contact_buf, contact_body_id
         # first timestep can sometimes still have nonzero contact forces
         # so only check after first couple of steps
         has_fallen *= (progress_buf > 1)
+        # print(fall_contact, fall_height)
         terminated = torch.where(has_fallen, torch.ones_like(reset_buf), terminated)
     
     reset = torch.where(progress_buf >= max_episode_length - 1, torch.ones_like(reset_buf), terminated)

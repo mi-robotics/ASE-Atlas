@@ -19,7 +19,7 @@ env:
   
   localRootObs: True
   keyBodies: ["FR_foot", "FL_foot", "RR_foot", "RL_foot"]
-  contactBodies: ["FR_foot", "FL_foot", "RR_foot", "RL_foot"]
+  contactBodies: ["FR_foot", "FL_foot", "RR_foot", "RL_foot", 'FL_calf', 'FR_calf', 'RL_calf', 'RR_calf']
   terminationHeight: 0.15
   enableEarlyTermination: True
 
