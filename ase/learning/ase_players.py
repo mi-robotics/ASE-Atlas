@@ -65,7 +65,8 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         self._ase_latents = torch.zeros((batch_size, self._latent_dim), dtype=torch.float32,
                                          device=self.device)
         
-        self._obs_buffer = torch.zeros((batch_size, 3, self.env.get_env_info()['observation_space']), dtype=torch.float32,
+        print(self.env.observation_space.shape)
+        self._obs_buffer = torch.zeros((batch_size, 3, self.env.observation_space.shape[0]), dtype=torch.float32,
                                          device=self.device)
         
         self.modules = {}

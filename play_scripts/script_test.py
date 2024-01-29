@@ -3,7 +3,9 @@ import subprocess
 
 command = 'cd .. && python ./ase/run.py \
     --test --task A1ASE \
-    --noise_level 2.0 \
+    --noise_level 1.0 \
+    --friction_overide 1.0 \
+    --use_delay 1 \
     --num_envs 1 \
     --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_env.yaml \
     --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_train.yaml \

@@ -244,7 +244,7 @@ class LASDAgent(ASEAgent):
             if self._use_lsgm:
                 vae_loss, vae_recon_loss, vae_info = self.model.a2c_network.actor.vae_loss_algo2(vae_latents, vae_params, vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
                 loss = a_loss + self.critic_coef * c_loss - self.entropy_coef * entropy + self.bounds_loss_coef * b_loss \
-                    + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss*0.1
+                    + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss*0.5
                 
               
                 gen_loss_info = {

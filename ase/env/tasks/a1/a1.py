@@ -168,6 +168,7 @@ class A1(BaseTask):
         self.default_dof_pos_all = torch.zeros(self.num_envs, self.num_dof, dtype=torch.float, device=self.device, requires_grad=False)
         for i in range(self.num_dofs):
             name = self.dof_names[i]
+         
             angle = self.a1_cfg.init_state.default_joint_angles[name]
             self.default_dof_pos[i] = angle
             found = False
@@ -190,7 +191,7 @@ class A1(BaseTask):
         self._key_body_ids = self._build_key_body_ids_tensor(self.feet_names)
        
         self._contact_body_ids = self._build_contact_body_ids_tensor(self.feet_names)
-        
+
         if self.viewer != None:
             self._init_camera()
 
@@ -272,6 +273,7 @@ class A1(BaseTask):
         plane_params.normal = gymapi.Vec3(0.0, 0.0, 1.0)
         plane_params.static_friction = self.plane_static_friction
         plane_params.dynamic_friction = self.plane_dynamic_friction
+     
         plane_params.restitution = self.plane_restitution
         self.gym.add_ground(self.sim, plane_params)
         return
@@ -322,7 +324,7 @@ class A1(BaseTask):
         asset_options.replace_cylinder_with_capsule = self.a1_cfg.asset.replace_cylinder_with_capsule
         asset_options.flip_visual_attachments = self.a1_cfg.asset.flip_visual_attachments
         asset_options.fix_base_link = self.a1_cfg.asset.fix_base_link
-        asset_options.density = self.a1_cfg.asset.density
+        asset_options.density = self.a1_cfg.asset.density 
         asset_options.angular_damping = self.a1_cfg.asset.angular_damping
         asset_options.linear_damping = self.a1_cfg.asset.linear_damping
         asset_options.max_angular_velocity = self.a1_cfg.asset.max_angular_velocity
@@ -344,7 +346,6 @@ class A1(BaseTask):
         self.torso_index = 0
         self.dof_names = self.gym.get_asset_dof_names(robot_asset)
   
-     
         self.num_bodies = len(body_names)
         self.num_dofs = len(self.dof_names)
         self.num_joints = self.gym.get_asset_joint_count(robot_asset)
@@ -831,6 +832,7 @@ class A1(BaseTask):
         
 
         for body_name in key_body_names:
+
             body_id = self.gym.find_actor_rigid_body_handle(env_ptr, actor_handle, body_name)
             assert(body_id != -1)
             body_ids.append(body_id)
@@ -1077,7 +1079,7 @@ def compute_humanoid_reset(reset_buf, progress_buf, contact_buf, contact_body_id
         masked_contact_buf[:, contact_body_ids, :] = 0
         fall_contact = torch.any(torch.abs(masked_contact_buf) > 0.1, dim=-1)
         fall_contact = torch.any(fall_contact, dim=-1)
-
+ 
         body_height = rigid_body_pos[..., 2]
         fall_height = body_height < termination_heights
         fall_height[:, contact_body_ids] = False

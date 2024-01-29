@@ -37,6 +37,7 @@ from env.tasks.humanoid_perturb import HumanoidPerturb
 from env.tasks.humanoid_view_motion import HumanoidViewMotion
 from env.tasks.a1.a1 import A1
 from env.tasks.a1.a1_ase import A1ASE
+from env.tasks.a1.go2_transfer import Go2Transfer
 from env.tasks.a1.a1_view_motion import A1ViewMotion
 from env.tasks.vec_task_wrappers import VecTaskPythonWrapper
 

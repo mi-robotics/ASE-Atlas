@@ -1,0 +1,2082 @@
+Traceback (most recent call last):
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/run.py", line 31, in <module>
+    from utils.config import set_np_formatting, set_seed, get_args, parse_sim_params, load_cfg
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/config.py", line 31, in <module>
+    import yaml
+ModuleNotFoundError: No module named 'yaml'
+Traceback (most recent call last):
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/train_scripts/script_train.py", line 27, in <module>
+    subprocess.run(command, shell=True, check=True, text=True)
+  File "/home/mcarroll/miniconda3/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command 'cd .. && python ase/run.py     --task A1ASE     --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_env.yaml     --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_train.yaml     --motion_file ./ase/data/motions/dog_mocap_processed/all_inv.yaml   --headless' returned non-zero exit status 1.
+Importing module 'gym_38' (/home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/linux-x86_64/gym_38.so)
+Setting GYM_USD_PLUG_INFO_PATH to /home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/linux-x86_64/usd/plugInfo.json
+PyTorch version 2.1.2+cu121
+Device count 1
+/home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/src/gymtorch
+Using /home/mcarroll/.cache/torch_extensions/py38_cu121 as PyTorch extensions root...
+Emitting ninja build file /home/mcarroll/.cache/torch_extensions/py38_cu121/gymtorch/build.ninja...
+Building extension module gymtorch...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+ninja: no work to do.
+Loading extension module gymtorch...
+2024-01-28 21:10:57,565 - INFO - logger - logger initialized
+Error: FBX library failed to load - importing FBX data will not succeed. Message: No module named 'fbx'
+FBX tools must be installed from https://help.autodesk.com/view/FBX/2020/ENU/?guid=FBX_Developer_Help_scripting_with_python_fbx_installing_python_fbx_html
+MOVING MOTION DATA TO GPU, USING CACHE: True
+Importing module 'rlgpu_38' (/home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/linux-x86_64/rlgpu_38.so)
+Not connected to PVD
++++ Using GPU PhysX
+Physics Engine: PhysX
+Physics Device: cuda:0
+GPU Pipeline: enabled
+Setting seed: 8040
+Started to train
+ERALY TERMINATION True
+Creating env...
+  0%|          | 0/1024 [00:00<?, ?it/s]100%|██████████| 1024/1024 [00:00<00:00, 15369.52it/s]Loading 1/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk03_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 2/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 3/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 4/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk03_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 5/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk03_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 6/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 7/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_9.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 8/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_8.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 9/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 10/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_turn00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 11/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk05_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 12/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk05_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 13/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_turn00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 14/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 15/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_trot_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 16/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk02_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 17/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_10.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 18/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 19/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk02_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 20/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 21/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk06_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 22/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk06_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 23/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk04_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 24/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 25/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 26/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 27/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 28/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 29/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 30/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 31/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_5.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 32/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_4.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 33/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 34/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 35/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_6.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 36/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_7.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 37/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk03_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 38/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 39/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 40/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk03_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 41/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk03_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 42/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 43/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_9.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 44/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_8.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 45/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 46/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_turn00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 47/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk05_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 48/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk05_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 49/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_turn00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 50/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 51/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_trot_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 52/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk02_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 53/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_10.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 54/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 55/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk02_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 56/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 57/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk06_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 58/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk06_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 59/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk04_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 60/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 61/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 62/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 63/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 64/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 65/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 66/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 67/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_5.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 68/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_4.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 69/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 70/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 71/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_6.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 72/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_7.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loaded 72 motions with a total length of 227.800s.
+RL device-:  cuda:0
+num_envs: 1024
+num_actions: 12
+num_obs: 109
+num_states: 0
+Box(-1.0, 1.0, (12,), float32) Box(-inf, inf, (109,), float32) Box([], [], (0,), float32)
+Env info:
+{'action_space': Box(-1.0, 1.0, (12,), float32), 'observation_space': Box(-inf, inf, (109,), float32), 'amp_observation_space': Box(-inf, inf, (1090,), float32), 'state_space': Box([], [], (0,), float32)}
+RunningMeanStd:  (1,)
+build amp style cat net: 109 24
+build amp mlp net: 133
+build mlp: 1090
+sigma
+actor_mlp._style_mlp.0.weight
+actor_mlp._style_mlp.0.bias
+actor_mlp._style_mlp.2.weight
+actor_mlp._style_mlp.2.bias
+actor_mlp._style_dense.weight
+actor_mlp._style_dense.bias
+actor_mlp._dense_layers.0.weight
+actor_mlp._dense_layers.0.bias
+
+/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/site-packages/gym/spaces/box.py:127: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(f"Box bound precision lowered by casting to {self.dtype}")
+/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/modules/velocity_estimator.py:33: UserWarning: nn.init.xavier_uniform is now deprecated in favor of nn.init.xavier_uniform_.
+  torch.nn.init.xavier_uniform(m.weight)
+actor_mlp._dense_layers.1.weight
+actor_mlp._dense_layers.1.bias
+actor_mlp._dense_layers.2.weight
+actor_mlp._dense_layers.2.bias
+critic_mlp._mlp.0.weight
+critic_mlp._mlp.0.bias
+critic_mlp._mlp.2.weight
+critic_mlp._mlp.2.bias
+critic_mlp._mlp.4.weight
+critic_mlp._mlp.4.bias
+value.weight
+value.bias
+mu.weight
+mu.bias
+_disc_mlp.0.weight
+_disc_mlp.0.bias
+_disc_mlp.2.weight
+_disc_mlp.2.bias
+_disc_mlp.4.weight
+_disc_mlp.4.bias
+_disc_logits.weight
+_disc_logits.bias
+_enc.weight
+_enc.bias
+RunningMeanStd:  (109,)
+RunningMeanStd:  (1090,)
+RunningMeanStd:  145
+tensor([[ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4329e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4329e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4328e-02,
+         -1.3205e-01, -3.2175e-01],
+        ...,
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4353e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4353e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4353e-02,
+         -1.3205e-01, -3.2175e-01]], device='cuda:0')
+Traceback (most recent call last):
+  File "ase/run.py", line 250, in <module>
+    main()
+  File "ase/run.py", line 245, in main
+    runner.run(vargs)
+  File "/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/site-packages/rl_games/torch_runner.py", line 139, in run
+    self.run_train()
+  File "/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/site-packages/rl_games/torch_runner.py", line 125, in run_train
+    agent.train()
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/common_agent.py", line 129, in train
+    train_info = self.train_epoch()
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/amp_agent.py", line 216, in train_epoch
+    batch_dict = self.play_steps() 
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/ase_agent.py", line 145, in play_steps
+    input()
+OSError: [Errno 9] Bad file descriptor
+Traceback (most recent call last):
+  File "script_train.py", line 27, in <module>
+    subprocess.run(command, shell=True, check=True, text=True)
+  File "/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/subprocess.py", line 516, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command 'cd .. && python ase/run.py     --task A1ASE     --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_env.yaml     --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_train.yaml     --motion_file ./ase/data/motions/dog_mocap_processed/all_inv.yaml   --headless' returned non-zero exit status 1.
+Importing module 'gym_38' (/home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/linux-x86_64/gym_38.so)
+Setting GYM_USD_PLUG_INFO_PATH to /home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/linux-x86_64/usd/plugInfo.json
+PyTorch version 2.1.2+cu121
+Device count 1
+/home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/src/gymtorch
+Using /home/mcarroll/.cache/torch_extensions/py38_cu121 as PyTorch extensions root...
+Emitting ninja build file /home/mcarroll/.cache/torch_extensions/py38_cu121/gymtorch/build.ninja...
+Building extension module gymtorch...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+ninja: no work to do.
+Loading extension module gymtorch...
+2024-01-28 21:11:26,930 - INFO - logger - logger initialized
+Error: FBX library failed to load - importing FBX data will not succeed. Message: No module named 'fbx'
+FBX tools must be installed from https://help.autodesk.com/view/FBX/2020/ENU/?guid=FBX_Developer_Help_scripting_with_python_fbx_installing_python_fbx_html
+MOVING MOTION DATA TO GPU, USING CACHE: True
+Importing module 'rlgpu_38' (/home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/linux-x86_64/rlgpu_38.so)
+Not connected to PVD
++++ Using GPU PhysX
+Physics Engine: PhysX
+Physics Device: cuda:0
+GPU Pipeline: enabled
+Setting seed: 1180
+Started to train
+ERALY TERMINATION True
+Creating env...
+  0%|          | 0/1024 [00:00<?, ?it/s]100%|██████████| 1024/1024 [00:00<00:00, 15748.17it/s]Loading 1/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk03_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 2/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 3/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 4/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk03_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 5/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk03_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 6/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 7/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_9.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 8/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_8.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 9/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 10/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_turn00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 11/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk05_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 12/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk05_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 13/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_turn00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 14/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 15/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_trot_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 16/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk02_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 17/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_10.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 18/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 19/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk02_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 20/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 21/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk06_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 22/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk06_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 23/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk04_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 24/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 25/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 26/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 27/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 28/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 29/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 30/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 31/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_5.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 32/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_4.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 33/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 34/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 35/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_6.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 36/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_7.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 37/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk03_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 38/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 39/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 40/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk03_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 41/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk03_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 42/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 43/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_9.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 44/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_8.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 45/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 46/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_turn00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 47/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk05_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 48/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk05_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 49/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_turn00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 50/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 51/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_trot_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 52/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk02_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 53/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_10.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 54/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 55/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk02_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 56/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 57/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk06_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 58/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk06_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 59/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk04_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 60/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 61/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 62/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 63/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 64/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 65/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 66/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 67/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_5.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 68/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_4.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 69/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 70/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 71/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_6.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 72/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_7.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loaded 72 motions with a total length of 227.800s.
+RL device-:  cuda:0
+num_envs: 1024
+num_actions: 12
+num_obs: 109
+num_states: 0
+Box(-1.0, 1.0, (12,), float32) Box(-inf, inf, (109,), float32) Box([], [], (0,), float32)
+Env info:
+{'action_space': Box(-1.0, 1.0, (12,), float32), 'observation_space': Box(-inf, inf, (109,), float32), 'amp_observation_space': Box(-inf, inf, (1090,), float32), 'state_space': Box([], [], (0,), float32)}
+RunningMeanStd:  (1,)
+build amp style cat net: 109 24
+build amp mlp net: 133
+build mlp: 1090
+sigma
+actor_mlp._style_mlp.0.weight
+actor_mlp._style_mlp.0.bias
+actor_mlp._style_mlp.2.weight
+actor_mlp._style_mlp.2.bias
+actor_mlp._style_dense.weight
+actor_mlp._style_dense.bias
+actor_mlp._dense_layers.0.weight
+actor_mlp._dense_layers.0.bias
+
+/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/site-packages/gym/spaces/box.py:127: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(f"Box bound precision lowered by casting to {self.dtype}")
+/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/modules/velocity_estimator.py:33: UserWarning: nn.init.xavier_uniform is now deprecated in favor of nn.init.xavier_uniform_.
+  torch.nn.init.xavier_uniform(m.weight)
+actor_mlp._dense_layers.1.weight
+actor_mlp._dense_layers.1.bias
+actor_mlp._dense_layers.2.weight
+actor_mlp._dense_layers.2.bias
+critic_mlp._mlp.0.weight
+critic_mlp._mlp.0.bias
+critic_mlp._mlp.2.weight
+critic_mlp._mlp.2.bias
+critic_mlp._mlp.4.weight
+critic_mlp._mlp.4.bias
+value.weight
+value.bias
+mu.weight
+mu.bias
+_disc_mlp.0.weight
+_disc_mlp.0.bias
+_disc_mlp.2.weight
+_disc_mlp.2.bias
+_disc_mlp.4.weight
+_disc_mlp.4.bias
+_disc_logits.weight
+_disc_logits.bias
+_enc.weight
+_enc.bias
+RunningMeanStd:  (109,)
+RunningMeanStd:  (1090,)
+RunningMeanStd:  145
+tensor([[ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4329e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4329e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4328e-02,
+         -1.3205e-01, -3.2175e-01],
+        ...,
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4353e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4353e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4353e-02,
+         -1.3205e-01, -3.2175e-01]], device='cuda:0')
+Traceback (most recent call last):
+  File "ase/run.py", line 250, in <module>
+    main()
+  File "ase/run.py", line 245, in main
+    runner.run(vargs)
+  File "/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/site-packages/rl_games/torch_runner.py", line 139, in run
+    self.run_train()
+  File "/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/site-packages/rl_games/torch_runner.py", line 125, in run_train
+    agent.train()
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/common_agent.py", line 129, in train
+    train_info = self.train_epoch()
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/amp_agent.py", line 216, in train_epoch
+    batch_dict = self.play_steps() 
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/ase_agent.py", line 145, in play_steps
+    input()
+OSError: [Errno 9] Bad file descriptor
+Traceback (most recent call last):
+  File "script_train.py", line 27, in <module>
+    subprocess.run(command, shell=True, check=True, text=True)
+  File "/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/subprocess.py", line 516, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command 'cd .. && python ase/run.py     --task A1ASE     --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_env.yaml     --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_train.yaml     --motion_file ./ase/data/motions/dog_mocap_processed/all_inv.yaml   --headless' returned non-zero exit status 1.
+Importing module 'gym_38' (/home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/linux-x86_64/gym_38.so)
+Setting GYM_USD_PLUG_INFO_PATH to /home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/linux-x86_64/usd/plugInfo.json
+PyTorch version 2.1.2+cu121
+Device count 1
+/home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/src/gymtorch
+Using /home/mcarroll/.cache/torch_extensions/py38_cu121 as PyTorch extensions root...
+Emitting ninja build file /home/mcarroll/.cache/torch_extensions/py38_cu121/gymtorch/build.ninja...
+Building extension module gymtorch...
+Allowing ninja to set a default number of workers... (overridable by setting the environment variable MAX_JOBS=N)
+ninja: no work to do.
+Loading extension module gymtorch...
+2024-01-28 21:11:40,554 - INFO - logger - logger initialized
+Error: FBX library failed to load - importing FBX data will not succeed. Message: No module named 'fbx'
+FBX tools must be installed from https://help.autodesk.com/view/FBX/2020/ENU/?guid=FBX_Developer_Help_scripting_with_python_fbx_installing_python_fbx_html
+MOVING MOTION DATA TO GPU, USING CACHE: True
+Importing module 'rlgpu_38' (/home/mcarroll/Documents/isaacgym/python/isaacgym/_bindings/linux-x86_64/rlgpu_38.so)
+Not connected to PVD
++++ Using GPU PhysX
+Physics Engine: PhysX
+Physics Device: cuda:0
+GPU Pipeline: enabled
+Setting seed: 1000
+Started to train
+ERALY TERMINATION True
+Creating env...
+  0%|          | 0/1024 [00:00<?, ?it/s]100%|██████████| 1024/1024 [00:00<00:00, 14482.43it/s]Loading 1/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk03_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 2/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 3/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 4/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk03_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 5/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk03_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 6/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 7/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_9.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 8/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_8.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 9/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk01_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 10/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_turn00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 11/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk05_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 12/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk05_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 13/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_turn00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 14/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 15/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_trot_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 16/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk02_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 17/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_10.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 18/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 19/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk02_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 20/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 21/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk06_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 22/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk06_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 23/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk04_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 24/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 25/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 26/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 27/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 28/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 29/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 30/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 31/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_5.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 32/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_4.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 33/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 34/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_run02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 35/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_6.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 36/72 motion files: ./ase/data/motions/dog_mocap_processed/dog_walk09_7.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 37/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk03_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 38/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 39/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 40/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk03_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 41/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk03_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 42/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 43/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_9.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 44/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_8.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 45/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk01_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 46/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_turn00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 47/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk05_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 48/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk05_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 49/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_turn00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 50/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 51/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_trot_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 52/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk02_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 53/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_10.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 54/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk00_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 55/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk02_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 56/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 57/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk06_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 58/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk06_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 59/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk04_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 60/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 61/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run01_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 62/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_3.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 63/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_2.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 64/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 65/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run04_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 66/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_1.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 67/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_5.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 68/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_4.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 69/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run00_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 70/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_run02_0.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 71/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_6.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loading 72/72 motion files: ./ase/data/motions/dog_mocap_processed/./inv/dog_walk09_7.npy
+Error for key= global_root_yaw_rotation
+Error for key= global_translation_xy
+Error for key= global_translation_xz
+Error for key= local_rotation_to_root
+Error for key= local_translation_to_root
+Error for key= root_translation_xy
+Total added 17
+Loaded 72 motions with a total length of 227.800s.
+RL device-:  cuda:0
+num_envs: 1024
+num_actions: 12
+num_obs: 109
+num_states: 0
+Box(-1.0, 1.0, (12,), float32) Box(-inf, inf, (109,), float32) Box([], [], (0,), float32)
+Env info:
+{'action_space': Box(-1.0, 1.0, (12,), float32), 'observation_space': Box(-inf, inf, (109,), float32), 'amp_observation_space': Box(-inf, inf, (1090,), float32), 'state_space': Box([], [], (0,), float32)}
+RunningMeanStd:  (1,)
+build amp style cat net: 109 24
+build amp mlp net: 133
+build mlp: 1090
+sigma
+actor_mlp._style_mlp.0.weight
+actor_mlp._style_mlp.0.bias
+actor_mlp._style_mlp.2.weight
+actor_mlp._style_mlp.2.bias
+actor_mlp._style_dense.weight
+actor_mlp._style_dense.bias
+actor_mlp._dense_layers.0.weight
+actor_mlp._dense_layers.0.bias
+
+/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/site-packages/gym/spaces/box.py:127: UserWarning: [33mWARN: Box bound precision lowered by casting to float32[0m
+  logger.warn(f"Box bound precision lowered by casting to {self.dtype}")
+/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/modules/velocity_estimator.py:33: UserWarning: nn.init.xavier_uniform is now deprecated in favor of nn.init.xavier_uniform_.
+  torch.nn.init.xavier_uniform(m.weight)
+actor_mlp._dense_layers.1.weight
+actor_mlp._dense_layers.1.bias
+actor_mlp._dense_layers.2.weight
+actor_mlp._dense_layers.2.bias
+critic_mlp._mlp.0.weight
+critic_mlp._mlp.0.bias
+critic_mlp._mlp.2.weight
+critic_mlp._mlp.2.bias
+critic_mlp._mlp.4.weight
+critic_mlp._mlp.4.bias
+value.weight
+value.bias
+mu.weight
+mu.bias
+_disc_mlp.0.weight
+_disc_mlp.0.bias
+_disc_mlp.2.weight
+_disc_mlp.2.bias
+_disc_mlp.4.weight
+_disc_mlp.4.bias
+_disc_logits.weight
+_disc_logits.bias
+_enc.weight
+_enc.bias
+RunningMeanStd:  (109,)
+RunningMeanStd:  (1090,)
+RunningMeanStd:  145
+tensor([[ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4329e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4329e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4328e-02,
+         -1.3205e-01, -3.2175e-01],
+        ...,
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4353e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4353e-02,
+         -1.3205e-01, -3.2175e-01],
+        [ 3.4983e-01,  1.0000e+00,  4.3042e-11,  ..., -2.4353e-02,
+         -1.3205e-01, -3.2175e-01]], device='cuda:0')
+Traceback (most recent call last):
+  File "ase/run.py", line 250, in <module>
+    main()
+  File "ase/run.py", line 245, in main
+    runner.run(vargs)
+  File "/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/site-packages/rl_games/torch_runner.py", line 139, in run
+    self.run_train()
+  File "/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/site-packages/rl_games/torch_runner.py", line 125, in run_train
+    agent.train()
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/common_agent.py", line 129, in train
+    train_info = self.train_epoch()
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/amp_agent.py", line 216, in train_epoch
+    batch_dict = self.play_steps() 
+  File "/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/ase_agent.py", line 145, in play_steps
+    input()
+OSError: [Errno 9] Bad file descriptor
+Traceback (most recent call last):
+  File "script_train.py", line 27, in <module>
+    subprocess.run(command, shell=True, check=True, text=True)
+  File "/home/mcarroll/miniconda3/envs/isaac/lib/python3.8/subprocess.py", line 516, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command 'cd .. && python ase/run.py     --task A1ASE     --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_env.yaml     --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_train.yaml     --motion_file ./ase/data/motions/dog_mocap_processed/all_inv.yaml   --headless' returned non-zero exit status 1.

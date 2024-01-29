@@ -85,11 +85,11 @@ def load_cfg(args):
         cfg = yaml.load(f, Loader=yaml.SafeLoader)
 
     # Override number of environments if passed on the command line
-    if hasattr(args, 'friction_overide'):
-        cfg['env']['staticFriction'] = args.friction_overide
-        cfg['env']['dynamicFriction'] = args.friction_overide
+    if args.friction_overide is not None:
+        cfg['env']['plane']['staticFriction'] = args.friction_overide
+        cfg['env']['plane']['dynamicFriction'] = args.friction_overide
 
-    if hasattr(args, 'use_delay'):
+    if args.use_delay is not None:
         cfg_train['params']['config']['player_obs_delay'] = args.use_delay
 
     if 'noiseLevel' in cfg['env'].keys():
@@ -243,10 +243,10 @@ def get_args(benchmark=False):
         {"name": "--noise_level", "type": float, "default": 1.,
             "help": "Controls how much noise to add proportionally to realistic levels"},
        
-        {"name": "--friction_overide", "type": float, 'options':[0.1, 2.0],
+        {"name": "--friction_overide", "type": float, 'options':[0.1, 1.0, 2.0],
             "help": "overrides the friction terms for the environemnt"},
         
-        {"name": "--use_delay",  "type": int, 'options':[1, 2],
+        {"name": "--use_delay",  "type": int, 'options':[0, 1, 2],
             "help": "Only effective for player scenario - testing using delays"}
             ]
 
