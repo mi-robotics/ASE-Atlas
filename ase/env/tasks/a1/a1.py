@@ -570,8 +570,7 @@ class A1(BaseTask):
                                                    self._rigid_body_pos, self.max_episode_length,
                                                    self._enable_early_termination, self._termination_heights)
         
-        print(self._terminate_buf)
-        input()
+       
         return
     
     def _get_ground_penetration(self):

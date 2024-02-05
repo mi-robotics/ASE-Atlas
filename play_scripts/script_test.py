@@ -4,13 +4,13 @@ import subprocess
 command = 'cd .. && python ./ase/run.py \
     --test --task A1ASE \
     --noise_level 1.0 \
-    --friction_overide 1.0 \
+    --friction_overide 1 \
     --use_delay 1 \
     --num_envs 1 \
     --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_env.yaml \
     --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_train.yaml \
     --motion_file ./ase/data/motions/dogo/dogo_data_1.yaml \
-    --checkpoint ./output/demo/nn/LARGE_DOGO_ALL_00050000.pth'
+    --checkpoint ./output/LARGE_DOGO_ALL_23-19-08-40/nn/LARGE_DOGO_ALL.pth'
 
 
 
