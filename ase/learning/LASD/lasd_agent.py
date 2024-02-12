@@ -44,6 +44,7 @@ class LASDAgent(ASEAgent):
         super().__init__(base_name, config)
 
         self._use_lsgm = self.model.a2c_network._use_lsgm
+        self._use_score_target = True
 
         if not self._use_lsgm:
             self._vae_altent_dim = self.model.a2c_network.actor.latent_dim
@@ -252,7 +253,7 @@ class LASDAgent(ASEAgent):
                     'vae_recon_loss':vae_info['lsgm_vae_recon_loss'].mean(), 
                     'vae_loss': vae_loss
                 }
-                print(gen_loss_info)
+           
             else:
                 vae_kl_loss = self._vae_kl_loss(vae_latents, vae_params)
                 vae_recon_loss = self._vae_recon_loss(vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
@@ -333,7 +334,17 @@ class LASDAgent(ASEAgent):
 
         self.scaler.update()
 
-      
+        #Todo the problem with this is that is varry the the number of minibatcvh
+        #this also depend on the number of envioronemnts
+        # if self._use_score_target:
+        #     tau = 0.001
+        #     with torch.no_grad():
+        #         target_model = self.model.a2c_network.actor.score_target
+        #         score_model = self.model.a2c_network.actor.score_model
+        #         for target_param, policy_param in zip(target_model.parameters(), score_model.parameters()):
+        #             target_param.data.copy_(tau * policy_param.data + (1.0 - tau) * target_param.data)
+
+     
 
         with torch.no_grad():
             reduce_kl = not self.is_rnn
@@ -359,10 +370,30 @@ class LASDAgent(ASEAgent):
 
         return
     
+    def _post_update_callback(self, i, total_iterations ):
+        max_itr = 12
+        freq = total_iterations/max_itr
+        
+        if self._use_score_target:
+            tau = 0.01
+            #total/max = 4
+            if i%freq == 0:
+                with torch.no_grad():
+                    target_model = self.model.a2c_network.actor.score_target
+                    score_model = self.model.a2c_network.actor.score_model
+                    for target_param, policy_param in zip(target_model.parameters(), score_model.parameters()):
+                        target_param.data.copy_(tau * policy_param.data + (1.0 - tau) * target_param.data)
+
+        return
+    
     def _set_freeze_score_params(self, set_freeze):
         if self._use_lsgm:
             for param in self.model.a2c_network.actor.score_model.parameters():
                 param.requires_grad = set_freeze
+
+            if self._use_score_target:
+                for param in self.model.a2c_network.actor.score_target.parameters():
+                    param.requires_grad = set_freeze
         return
     
     def _set_freeze_all_params(self, set_freeze):
@@ -386,6 +417,7 @@ class LASDAgent(ASEAgent):
         assert(n == action_params.shape[0])
     
         new_z = self._sample_latents(n)
+
         net_dict = self._eval_actor(obs=obs, ase_latents=new_z)
 
         mu = net_dict['mu']

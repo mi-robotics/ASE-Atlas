@@ -47,8 +47,8 @@ params:
         latent_dim: 64
         activation: relu
         recon_skill: True
-        recon_state: True
-        recon_next_state: False
+        recon_state: False
+        recon_next_state: True
         beta: 0.5
         use_mean_eval: True
         use_seperate_reconstructor: False
@@ -85,7 +85,7 @@ params:
   load_checkpoint: False
 
   config:
-    name: LSGM_V1_LARGE
+    name: LSGM_V1_REPRO_TEST_smooth
     env_name: rlgpu
     multi_gpu: False
     ppo: True
@@ -97,7 +97,7 @@ params:
     normalize_advantage: True
     gamma: 0.99
     tau: 0.95
-    learning_rate: 2e-5
+    learning_rate: 2e-6
     lr_schedule: constant
     score_to_win: 20000
     max_epochs: 100000

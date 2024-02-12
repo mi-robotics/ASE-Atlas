@@ -11,3 +11,5 @@ command = 'cd .. && python ase/run.py \
 
 
 subprocess.run(command, shell=True, check=True, text=True)
+
+
