@@ -19,18 +19,57 @@ class Go2Transfer(A1ASE):
     """
     Assuming that we have trained a policy for the A1 Unitree - converting this to the Go1 which has different joint freedoms, mopstly
 
-    # A1 Config
+    A1 Limits:
+        0
+        -1.123992 1.123992
+        1
+        -2.094395 5.2359877
+        2
+        -3.0525808 -0.56025076
+        3
+        -1.123992 1.123992
+        4
+        -2.094395 5.2359877
+        5
+        -3.0525808 -0.56025076
+        6
+        -1.123992 1.123992
+        7
+        -2.094395 5.2359877
+        8
+        -3.0525808 -0.56025076
+        9
+        -1.123992 1.123992
+        10
+        -2.094395 5.2359877
+        11
+        -3.0525808 -0.56025076
 
-    Hip joint: -46°~46°  => 92
-    Thigh joint: -60°~240°  => 300
-    Calf joint: -154.5°~-52.5 => 102
-
-    # Go2 Config
-
-    body：-48~48°,  => 94
-    thigh：-200°~90°, => 
-    shank：-156°~-48°
-
+    Go2 Limits:
+        0
+        -1.46608 1.46608
+        1
+        -2.5831 4.5030003
+        2
+        -3.099688 -0.46077195
+        3
+        -1.46608 1.46608
+        4
+        -2.5831 4.5030003
+        5
+        -3.099688 -0.46077195
+        6
+        -1.46608 1.46608
+        7
+        -1.5359001 5.5502
+        8
+        -3.099688 -0.46077195
+        9
+        -1.46608 1.46608
+        10
+        -1.5359001 5.5502
+        11
+        -3.099688 -0.46077195
     """
     class StateInit(Enum):
         Default = 0
@@ -213,8 +252,88 @@ class Go2Transfer(A1ASE):
         
         self._amp_obs_demo_buf = None
 
+        self._set_up_limit_matching()
+
         return
         
+
+    def _set_up_limit_matching(self):
+        '''
+        given some target proportional target to actual joint target angle should be the same
+        '''
+        a1 = [[-1.123992, 1.123992],
+        [-2.094395, 5.2359877],
+        [-3.0525808, -0.56025076],
+        [-1.123992, 1.123992],
+        [-2.094395, 5.2359877],
+        [-3.0525808, -0.56025076],
+        [-1.123992, 1.123992],
+        [-2.094395, 5.2359877],
+        [-3.0525808, -0.56025076],
+        [-1.123992, 1.123992],
+        [-2.094395, 5.2359877],
+        [-3.0525808, -0.56025076]]
+
+        go2 = [
+        [-1.46608, 1.46608],
+        [-2.5831, 4.5030003],
+        [-3.099688, -0.46077195],
+        [-1.46608, 1.46608],
+        [-2.5831, 4.5030003],
+        [-3.099688, -0.46077195],
+        [-1.46608, 1.46608],
+        [-1.5359001, 5.5502],
+        [-3.099688, -0.46077195],
+        [-1.46608, 1.46608],
+        [-1.5359001, 5.5502],
+        [-3.099688, -0.46077195]]
+
+        """
+        given 0.2
+        jarget = mean-0.2*(diff)
+        
+        - scale diff, delta mean
+        """
+        print('/////////////////// TESTING REMAPPING /////////////////////////')
+
+        scale_diffs = []
+        for i in range(len(a1)):
+            a1_delta = a1[i][1] - a1[i][0]  
+            go_delta = go2[i][1] - go2[i][0]
+            scale_diffs.append(a1_delta/go_delta)
+
+        mean_deltas = []
+        for i in range(len(a1)):
+            a1_mean = (a1[i][1] + a1[i][0])/2
+            go_mean = (go2[i][1] + go2[i][0])/2
+            mean_deltas.append(a1_mean-go_mean)
+
+        _a1_scale_diffs = np.array(scale_diffs)
+        _a1_mean_deltas = np.array(mean_deltas)
+
+        # target = 0.4
+
+        # for i in range(len(a1)):
+        #     a1_offset = (a1[i][1] + a1[i][0])/2
+        #     a1_scale = (a1[i][1] - a1[i][0])/2
+        #     a1_target = 0.4 * (a1_scale) + a1_offset
+
+        #     go_offset = (go2[i][1] + go2[i][0])/2
+        #     go_scale = (go2[i][1] - go2[i][0])/2
+        #     go_target = 0.4 * (go_scale) + go_offset
+
+        #     go_remapped = 0.4 * (go_scale*scale_diffs[i]) + mean_deltas[i] + go_offset
+            
+        #     print('targets')
+        #     print(a1_target)
+        #     print(go_target)
+        #     print(go_remapped)
+
+        #     input()
+
+        return _a1_scale_diffs, _a1_mean_deltas
+    
+
     def _setup_character_props(self, key_bodies):
   
 
@@ -237,59 +356,73 @@ class Go2Transfer(A1ASE):
     
 
 
+    def _action_to_pd_targets(self, action):
+        #TODO: PD 
+        pd_tar = self._pd_action_offset + self._pd_action_scale * action
+        return pd_tar
 
 
-
-    # def _build_pd_action_offset_scale(self):
-    #     num_joints = len(self._dof_offsets) - 1
+    def _build_pd_action_offset_scale(self):
+        num_joints = len(self._dof_offsets) - 1
         
-    #     lim_low = self.dof_limits_lower.cpu().numpy()
-    #     lim_high = self.dof_limits_upper.cpu().numpy()
+        lim_low = self.dof_limits_lower.cpu().numpy()
+        lim_high = self.dof_limits_upper.cpu().numpy()
 
-    #     for j in range(num_joints):
-    #         dof_offset = self._dof_offsets[j]
-    #         dof_size = self._dof_offsets[j + 1] - self._dof_offsets[j]
+        for j in range(num_joints):
+            dof_offset = self._dof_offsets[j]
+            dof_size = self._dof_offsets[j + 1] - self._dof_offsets[j]
 
-    #         if (dof_size == 3):
-    #             curr_low = lim_low[dof_offset:(dof_offset + dof_size)]
-    #             curr_high = lim_high[dof_offset:(dof_offset + dof_size)]
-    #             curr_low = np.max(np.abs(curr_low))
-    #             curr_high = np.max(np.abs(curr_high))
-    #             curr_scale = max([curr_low, curr_high])
-    #             curr_scale = 1.2 * curr_scale
-    #             curr_scale = min([curr_scale, np.pi])
+            if (dof_size == 3):
+                curr_low = lim_low[dof_offset:(dof_offset + dof_size)]
+                curr_high = lim_high[dof_offset:(dof_offset + dof_size)]
+                curr_low = np.max(np.abs(curr_low))
+                curr_high = np.max(np.abs(curr_high))
+                curr_scale = max([curr_low, curr_high])
+                curr_scale = 1.2 * curr_scale
+                curr_scale = min([curr_scale, np.pi])
 
-    #             lim_low[dof_offset:(dof_offset + dof_size)] = -curr_scale
-    #             lim_high[dof_offset:(dof_offset + dof_size)] = curr_scale
+                lim_low[dof_offset:(dof_offset + dof_size)] = -curr_scale
+                lim_high[dof_offset:(dof_offset + dof_size)] = curr_scale
                 
-    #             #lim_low[dof_offset:(dof_offset + dof_size)] = -np.pi
-    #             #lim_high[dof_offset:(dof_offset + dof_size)] = np.pi
+                #lim_low[dof_offset:(dof_offset + dof_size)] = -np.pi
+                #lim_high[dof_offset:(dof_offset + dof_size)] = np.pi
 
 
-    #         elif (dof_size == 1):
-    #             curr_low = lim_low[dof_offset]
-    #             curr_high = lim_high[dof_offset]
+            elif (dof_size == 1):
+                curr_low = lim_low[dof_offset]
+                curr_high = lim_high[dof_offset]
                
-    #             curr_mid = 0.5 * (curr_high + curr_low)
+                curr_mid = 0.5 * (curr_high + curr_low)
                 
-    #             # extend the action range to be a bit beyond the joint limits so that the motors
-    #             # don't lose their strength as they approach the joint limits
-    #             curr_scale = 0.7 * (curr_high - curr_low)
-    #             curr_low = curr_mid - curr_scale
-    #             curr_high = curr_mid + curr_scale
+                # extend the action range to be a bit beyond the joint limits so that the motors
+                # don't lose their strength as they approach the joint limits
+                curr_scale = 0.7 * (curr_high - curr_low)
+                curr_low = curr_mid - curr_scale
+                curr_high = curr_mid + curr_scale
 
-    #             lim_low[dof_offset] = curr_low
-    #             lim_high[dof_offset] =  curr_high
+                lim_low[dof_offset] = curr_low
+                lim_high[dof_offset] =  curr_high
 
-    #     # mid range of the limits
-    #     self._pd_action_offset = 0.5 * (lim_high + lim_low)
-    #     # max direction either side of the limits from the mid
-    #     self._pd_action_scale = 0.5 * (lim_high - lim_low)
+        # mid range of the limits
+        self._pd_action_offset = 0.5 * (lim_high + lim_low)
+        # max direction either side of the limits from the mid
+        self._pd_action_scale = 0.5 * (lim_high - lim_low)
+
+        scale_diff, mean_delata = self._set_up_limit_matching()
+
+        self._pd_action_offset += mean_delata
+        self._pd_action_scale *= scale_diff
+
+        print(self._pd_action_offset.shape)
+        print(self._pd_action_scale.shape)
+        print(scale_diff.shape)
+        print(mean_delata.shape)
+        input()
  
-    #     self._pd_action_offset = to_torch(self._pd_action_offset, device=self.device)
-    #     self._pd_action_scale = to_torch(self._pd_action_scale, device=self.device)
+        self._pd_action_offset = to_torch(self._pd_action_offset, device=self.device)
+        self._pd_action_scale = to_torch(self._pd_action_scale, device=self.device)
 
-    #     return
+        return
     
 
     # def pre_physics_step(self, actions):

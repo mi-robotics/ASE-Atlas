@@ -192,7 +192,7 @@ class LSGM(torch.nn.Module):
 
         kl = log_prob_q + cross_entropy_per_var
   
-        nelbo_loss = 0.7* kl
+        nelbo_loss = 0.7 * kl
         # regularizer = None 
         #TODO lets add regularization in the future
 
