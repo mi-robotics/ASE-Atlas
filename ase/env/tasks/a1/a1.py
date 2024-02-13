@@ -345,7 +345,7 @@ class A1(BaseTask):
         # save body names from the asset
 
         body_names = self.gym.get_asset_rigid_body_names(robot_asset)
-        print(body_names)
+
         self.torso_index = 0
         self.dof_names = self.gym.get_asset_dof_names(robot_asset)
   
@@ -543,10 +543,7 @@ class A1(BaseTask):
                 lim_low[dof_offset] = curr_low
                 lim_high[dof_offset] =  curr_high
 
-                print(j)
-                print(lim_low[dof_offset], lim_high[dof_offset])
-
-        input()
+                
         # mid range of the limits
         self._pd_action_offset = 0.5 * (lim_high + lim_low)
         # max direction either side of the limits from the mid

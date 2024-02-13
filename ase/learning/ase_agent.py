@@ -141,8 +141,7 @@ class ASEAgent(amp_agent.AMPAgent):
             self.experience_buffer.update_data('obses', n, self.obs['obs'])
             self.experience_buffer.update_data('critic_obs', n, self.obs['critic_obs'])
 
-            print(self.obs['critic_obs'])
-            input()
+            
 
             self._update_latents()
 
