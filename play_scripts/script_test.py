@@ -10,7 +10,7 @@ command = 'cd .. && python ./ase/run.py \
     --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_env.yaml \
     --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_train.yaml \
     --motion_file ./ase/data/motions/dogo/dogo_data_1.yaml \
-    --checkpoint ./output/ALL_PRIORS_12-17-36-24/nn/ALL_PRIORS.pth'
+    --checkpoint ./output//ALL_PRIORS_13-08-08-05/nn/ALL_PRIORS.pth'
 
 # command = 'cd .. && python ./ase/run.py \
 #     --test --task A1ASE \

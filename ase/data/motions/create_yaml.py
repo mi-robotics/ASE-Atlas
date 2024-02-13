@@ -48,12 +48,12 @@ def create_yaml_from_directories(directory_paths, output_file):
 
     for directory_path in directory_paths:
         # Get all .npy file names in the directory with the full path appended
-        file_names = [os.path.join(directory_path, f) for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f)) and f.endswith('.npy')]
+        file_names = [os.path.join(directory_path, f) for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f)) and f.endswith('.npy') and not 'biped' in f and  not'handstand' in f]
         if INV:
             # Also include inv .npy files with './inv/' directory and full path
             inv_directory = os.path.join(directory_path, 'inv')
             if os.path.exists(inv_directory):  # Check if the inv directory exists
-                inv_files = [os.path.join(inv_directory, f) for f in os.listdir(inv_directory) if os.path.isfile(os.path.join(inv_directory, f)) and f.endswith('.npy')]
+                inv_files = [os.path.join(inv_directory, f) for f in os.listdir(inv_directory) if os.path.isfile(os.path.join(inv_directory, f)) and f.endswith('.npy') and not 'biped' in f and  not'handstand' in f]
                 file_names += inv_files
 
         total_num_files += len(file_names)
@@ -75,5 +75,5 @@ def create_yaml_from_directories(directory_paths, output_file):
 
 # Usage
 directory_paths = ['./a1_recording_processed', './a1_complex_processed', './dog_mocap_processed']  # Replace with your directory paths
-output_file = 'all_inv.yaml'  # Replace with your desired output file name
+output_file = 'all_simples_inv.yaml'  # Replace with your desired output file name
 create_yaml_from_directories(directory_paths, output_file)

@@ -23,7 +23,7 @@ a1_inv_files = os.listdir(a1_inv_dir)
 mocap_files = os.listdir(mocap_dir)
 mocap_inv_files = os.listdir(mocap_inv_dir)
 
-#a1 (50FPS)
+# a1 (50FPS)
 for f_name in a1_files:
     name = f_name.split('.npz')[0]
     f_path = a1_dir + '/' + f_name
@@ -33,22 +33,25 @@ for f_name in a1_files:
             data = np.load(f_path)
             pos = torch.Tensor(data['pos'])
             rot = torch.Tensor(data['rot'])
+            
+            if len(pos) > 50:
 
-            a1_skeleton = SkeletonState.from_file('/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/poselib/data/a1_tpose_v2.npy').skeleton_tree
+                a1_skeleton = SkeletonState.from_file('/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/poselib/data/a1_tpose_v2.npy').skeleton_tree
 
-            a1_state = SkeletonState.from_rotation_and_root_translation(
-                        a1_skeleton, r=rot, t=pos, is_local=True
-                    )
-            motion = SkeletonMotion.from_skeleton_state(a1_state, fps=50)
+                a1_state = SkeletonState.from_rotation_and_root_translation(
+                            a1_skeleton, r=rot, t=pos, is_local=True
+                        )
+                motion = SkeletonMotion.from_skeleton_state(a1_state, fps=50)
+                # plot_skeleton_motion_interactive(motion)
 
-            motion.to_file(f'data/a1_complex_processed{name}.npy')
+                motion.to_file(f'data/a1_complex_processed/{name}.npy')
         except:
             print('error')
             print(len(pos))
+
             input()
-            
-print('P1 complete')
-input()
+
+
 #a1 inv (50FPS)
 for f_name in a1_inv_files:
     name = f_name.split('.npz')[0]
@@ -60,14 +63,19 @@ for f_name in a1_inv_files:
             pos = torch.Tensor(data['pos'])
             rot = torch.Tensor(data['rot'])
 
-            a1_skeleton = SkeletonState.from_file('/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/poselib/data/a1_tpose_v2.npy').skeleton_tree
+       
+            if len(pos) > 50:
+                a1_skeleton = SkeletonState.from_file('/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/poselib/data/a1_tpose_v2.npy').skeleton_tree
 
-            a1_state = SkeletonState.from_rotation_and_root_translation(
-                        a1_skeleton, r=rot, t=pos, is_local=True
-                    )
-            motion = SkeletonMotion.from_skeleton_state(a1_state, fps=50)
+                a1_state = SkeletonState.from_rotation_and_root_translation(
+                            a1_skeleton, r=rot, t=pos, is_local=True
+                        )
+                motion = SkeletonMotion.from_skeleton_state(a1_state, fps=50)
 
-            motion.to_file(f'data/a1_complex_processed/inv/{name}.npy')
+                # plot_skeleton_motion_interactive(motion)
+
+                motion.to_file(f'data/a1_complex_processed/inv/{name}.npy')
+
         except:
             print('error')
             print(len(pos))
