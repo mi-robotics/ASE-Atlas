@@ -546,6 +546,7 @@ class A1(BaseTask):
    
 
         
+                
         # mid range of the limits
         self._pd_action_offset = 0.5 * (lim_high + lim_low)
         # max direction either side of the limits from the mid

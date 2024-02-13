@@ -12,8 +12,8 @@ from poselib.visualization.plot_simple import SimplePlotter
 
 import os
 
-a1_inv_dir = './data/a1_recording/inv'
-a1_dir = './data/a1_recording'
+a1_inv_dir = './data/a1_complex/inv'
+a1_dir = './data/a1_complex'
 
 mocap_inv_dir = './data/dog_mocap/inv'
 mocap_dir = './data/dog_mocap'
@@ -41,12 +41,13 @@ for f_name in a1_files:
                     )
             motion = SkeletonMotion.from_skeleton_state(a1_state, fps=50)
 
-            motion.to_file(f'data/a1_recording_processed/{name}.npy')
+            motion.to_file(f'data/a1_complex_processed{name}.npy')
         except:
             print('error')
             print(len(pos))
             input()
-
+            
+print('P1 complete')
 input()
 #a1 inv (50FPS)
 for f_name in a1_inv_files:
@@ -66,61 +67,61 @@ for f_name in a1_inv_files:
                     )
             motion = SkeletonMotion.from_skeleton_state(a1_state, fps=50)
 
-            motion.to_file(f'data/a1_recording_processed/inv/{name}.npy')
+            motion.to_file(f'data/a1_complex_processed/inv/{name}.npy')
         except:
             print('error')
             print(len(pos))
             input()
 
-input()
-#mocap 
-for f_name in mocap_files:
-    name = f_name.split('.npz')[0]
-    f_path = mocap_dir + '/' + f_name
+# input()
+# #mocap 
+# for f_name in mocap_files:
+#     name = f_name.split('.npz')[0]
+#     f_path = mocap_dir + '/' + f_name
 
-    if os.path.isfile(f_path):
-        try:
-            data = np.load(f_path)
-            pos = torch.Tensor(data['pos'])
-            rot = torch.Tensor(data['rot'])
+#     if os.path.isfile(f_path):
+#         try:
+#             data = np.load(f_path)
+#             pos = torch.Tensor(data['pos'])
+#             rot = torch.Tensor(data['rot'])
 
-            a1_skeleton = SkeletonState.from_file('/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/poselib/data/a1_tpose_v2.npy').skeleton_tree
+#             a1_skeleton = SkeletonState.from_file('/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/poselib/data/a1_tpose_v2.npy').skeleton_tree
 
-            a1_state = SkeletonState.from_rotation_and_root_translation(
-                        a1_skeleton, r=rot, t=pos, is_local=True
-                    )
-            motion = SkeletonMotion.from_skeleton_state(a1_state, fps=60)
+#             a1_state = SkeletonState.from_rotation_and_root_translation(
+#                         a1_skeleton, r=rot, t=pos, is_local=True
+#                     )
+#             motion = SkeletonMotion.from_skeleton_state(a1_state, fps=60)
 
-            motion.to_file(f'data/dog_mocap_processed/{name}.npy')
-        except:
-            print('error')
-            print(len(pos))
-            input()
+#             motion.to_file(f'data/dog_mocap_processed/{name}.npy')
+#         except:
+#             print('error')
+#             print(len(pos))
+#             input()
         
-input()
-#mocap inv
-for f_name in mocap_inv_files:
-    name = f_name.split('.npz')[0]
-    f_path = mocap_inv_dir + '/' + f_name
+# input()
+# #mocap inv
+# for f_name in mocap_inv_files:
+#     name = f_name.split('.npz')[0]
+#     f_path = mocap_inv_dir + '/' + f_name
 
-    if os.path.isfile(f_path):
-        try:
-            data = np.load(f_path)
-            pos = torch.Tensor(data['pos'])
-            rot = torch.Tensor(data['rot'])
+#     if os.path.isfile(f_path):
+#         try:
+#             data = np.load(f_path)
+#             pos = torch.Tensor(data['pos'])
+#             rot = torch.Tensor(data['rot'])
 
-            a1_skeleton = SkeletonState.from_file('/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/poselib/data/a1_tpose_v2.npy').skeleton_tree
+#             a1_skeleton = SkeletonState.from_file('/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/poselib/data/a1_tpose_v2.npy').skeleton_tree
 
-            a1_state = SkeletonState.from_rotation_and_root_translation(
-                        a1_skeleton, r=rot, t=pos, is_local=True
-                    )
-            motion = SkeletonMotion.from_skeleton_state(a1_state, fps=60)
+#             a1_state = SkeletonState.from_rotation_and_root_translation(
+#                         a1_skeleton, r=rot, t=pos, is_local=True
+#                     )
+#             motion = SkeletonMotion.from_skeleton_state(a1_state, fps=60)
 
-            motion.to_file(f'data/dog_mocap_processed/inv/{name}.npy')
-        except:
-            print('error')
-            print(len(pos))
-            input()
+#             motion.to_file(f'data/dog_mocap_processed/inv/{name}.npy')
+#         except:
+#             print('error')
+#             print(len(pos))
+#             input()
 
 # # Load the data
 # data = np.load(f'./data/a1_recording/1704478684.7267365.npz')

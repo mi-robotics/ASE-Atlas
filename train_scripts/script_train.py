@@ -19,19 +19,19 @@ import subprocess
 
 command = 'cd .. && python ase/run.py \
     --task A1ASE \
-    --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_env.yaml \
-    --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/dogo_all/a1_vel_est_train.yaml \
-    --motion_file ./ase/data/motions/dog_mocap_processed/all_inv.yaml\
+    --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/all/a1_vel_est_env.yaml \
+    --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/all/a1_vel_est_train.yaml \
+    --motion_file ./ase/data/motions/all_inv.yaml\
    --headless'
 
 subprocess.run(command, shell=True, check=True, text=True)
 
 
-command = 'cd .. && python ase/run.py \
-    --task A1ASE \
-    --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/a1_all/a1_vel_est_env.yaml \
-    --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/a1_all/a1_vel_est_train.yaml \
-    --motion_file ./ase/data/motions/a1_recording_processed/all_inv.yaml \
-   --headless'
+# command = 'cd .. && python ase/run.py \
+#     --task A1ASE \
+#     --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/a1_all/a1_vel_est_env.yaml \
+#     --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/a1_all/a1_vel_est_train.yaml \
+#     --motion_file ./ase/data/motions/a1_recording_processed/all_inv.yaml \
+#    --headless'
 
-subprocess.run(command, shell=True, check=True, text=True)
+# subprocess.run(command, shell=True, check=True, text=True)
