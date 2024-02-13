@@ -244,9 +244,12 @@ class AMPAgent(common_agent.CommonAgent):
             frames_mask_ratio = rnn_masks.sum().item() / (rnn_masks.nelement())
             print(frames_mask_ratio)
 
-        for _ in range(0, self.mini_epochs_num):
+        total_itr = self.mini_epochs_num * len(self.dataset)
+
+        for mini_epoch in range(0, self.mini_epochs_num):
             ep_kls = []
             for i in range(len(self.dataset)):
+               
                 curr_train_info = self.train_actor_critic(self.dataset[i])
                 
                 if self.schedule_type == 'legacy':  
@@ -262,6 +265,8 @@ class AMPAgent(common_agent.CommonAgent):
                 else:
                     for k, v in curr_train_info.items():
                         train_info[k].append(v)
+
+                self._post_update_callback(mini_epoch*len(self.dataset)+i, total_itr)
             
             av_kls = torch_ext.mean_list(train_info['kl'])
 
@@ -290,6 +295,9 @@ class AMPAgent(common_agent.CommonAgent):
         self._record_train_batch_info(batch_dict, train_info)
 
         return train_info
+    
+    def _post_update_callback(self,  i, total_iterations):
+        return
 
     def calc_gradients(self, input_dict):
         self.set_train()

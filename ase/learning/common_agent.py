@@ -227,6 +227,7 @@ class CommonAgent(a2c_continuous.A2CAgent):
             print(frames_mask_ratio)
 
         for _ in range(0, self.mini_epochs_num):
+            
             ep_kls = []
             for i in range(len(self.dataset)):
                 curr_train_info = self.train_actor_critic(self.dataset[i])

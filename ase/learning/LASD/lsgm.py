@@ -117,6 +117,12 @@ class LSGM(torch.nn.Module):
 
         self.vae = VAE(config)
         self.score_model = ScoreMLP(config)
+
+        self._use_target_model = True
+        if self._use_target_model:
+            self.score_target = ScoreMLP(config)
+            self.score_target.load_state_dict(self.score_model.state_dict())
+
         self.sde = VPSDE(config)
 
         # self.algo_version = config['lsgm']['algo_version']
@@ -149,7 +155,7 @@ class LSGM(torch.nn.Module):
         neg_entropy = torch.sum(log_prob_q, dim=-1)
 
         # compute recontruction loss
-        recon_loss = self.vae.recon_loss(reconstruction, ase_latents, obs, next_obs, reduce=True)
+        recon_loss = self.vae.recon_loss(reconstruction, ase_latents, obs, next_obs, reduce=True, vae_latents=latents)
         # recon_loss = torch.mean(recon_loss, dim=-1)
 
         # --------------- SCORE LOSS TERMS
@@ -164,7 +170,12 @@ class LSGM(torch.nn.Module):
         noised_latents = self.sde.sample_q_t(latents, mean, std, noise_T )
 
         #the model predictions
-        pred = self.score_model.forward(noised_latents, t)
+        if self._use_target_model:
+            pred = self.score_target.forward(noised_latents, t)
+        else:
+            pred = self.score_model.forward(noised_latents, t)
+        # pred = self.score_model.forward(noised_latents, t)
+
         if self._used_mixed_predictions:
             pred = self.get_mixed_prediction(noised_latents, std, pred)
 
@@ -187,12 +198,12 @@ class LSGM(torch.nn.Module):
 
         l2_penalty = sum(p.pow(2.0).sum() for p in self.vae.parameters())
 
-        vae_loss = torch.mean(nelbo_loss) + recon_loss # + 0.0001*l2_penalty
+        vae_loss = torch.mean(nelbo_loss) + 1*recon_loss # + 0.0001*l2_penalty
 
 
         info = {
             'lsgm_vae_kl_loss':kl,
-            'lsgm_vae_recon_loss': recon_loss
+            'lsgm_vae_recon_loss': recon_loss.detach()
         }
         
         return vae_loss, recon_loss, info
@@ -216,13 +227,13 @@ class LSGM(torch.nn.Module):
 
         #calc diffussion based loss terms 
         l2_term = torch.square(pred - noise_T) #TODO: This seems wrong
-        print('noise l2', l2_term.mean())
+     
         score_objective = torch.sum(w[:,None] * l2_term, dim=[-1])
       
         l2_penalty = sum(p.pow(2.0).sum() for p in self.score_model.parameters())
         score_loss = torch.mean(score_objective) #+ 0.0001*l2_penalty
 
-        return score_loss*0.01
+        return score_loss*0.01 #+ 0.0001*l2_penalty
     
 
     def forward(self, obs, skill_latents):

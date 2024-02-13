@@ -226,7 +226,7 @@ class VAE(torch.nn.Module):
         mu, log_var = params.chunk(2, dim=-1)
         return torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - log_var.exp(), dim = 1), dim = 0)
     
-    def recon_loss(self, recon, ase_latents, obs=None, next_obs=None, reduce=True):
+    def recon_loss(self, recon, ase_latents, obs=None, next_obs=None, reduce=True, vae_latents=None):
         target = []
         
         if self.recon_state and self.recon_next_state:
@@ -234,13 +234,25 @@ class VAE(torch.nn.Module):
         if self.recon_state:
             target.append(obs)
         if self.recon_next_state:
-            target.append(next_obs)
+            delta_obs = obs-next_obs
+            target.append(delta_obs)
         if self.recon_skill:
             target.append(ase_latents)
         
         target = torch.cat(target, dim=-1)
-            
-        return torch.nn.functional.mse_loss( recon, target, reduce=reduce)
+
+        l2_pen = sum(p.pow(2.0).sum() for p in self.decoder.recon_head.parameters())
+
+        loss = torch.nn.functional.mse_loss( recon, target, reduce=reduce)
+
+        recon_grad = torch.autograd.grad(loss, vae_latents, grad_outputs=torch.ones_like(loss),
+                                               create_graph=True, retain_graph=True, only_inputs=True)
+        recon_grad = recon_grad[0]
+        recon_grad = torch.sum(torch.square(recon_grad), dim=-1)
+        #enc_grad_penalty = torch.sum(loss_mask * enc_obs_grad) / mask_sum
+        recon_grad_penalty = torch.mean(recon_grad)
+
+        return loss + 1e-4*l2_pen + 5*recon_grad_penalty
        
     def forward(self, obs, skill_latents):
 
