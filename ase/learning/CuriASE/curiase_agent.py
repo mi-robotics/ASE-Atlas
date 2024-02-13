@@ -50,6 +50,7 @@ class CuriASEAgent(ASEAgent):
         return
     
     def play_steps(self):
+        
         self.set_eval()
         
         epinfos = []
@@ -153,6 +154,7 @@ class CuriASEAgent(ASEAgent):
         mb_next_obs = self.experience_buffer.tensor_dict['next_obses']
         mb_actions = self.experience_buffer.tensor_dict['actions']
         curiase_rewards = self._calc_curiase_rewards(mb_obs, mb_next_obs, mb_actions)
+        
         mb_rewards = self._combine_rewards(mb_rewards, amp_rewards, curiase_rewards)
         
         mb_advs = self.discount_values(mb_fdones, mb_values, mb_rewards, mb_next_values)
@@ -165,8 +167,9 @@ class CuriASEAgent(ASEAgent):
         for k, v in amp_rewards.items():
             batch_dict[k] = a2c_common.swap_and_flatten01(v)
 
+    
         batch_dict['curiase_rewards'] = a2c_common.swap_and_flatten01(curiase_rewards)
-
+  
         return batch_dict
     
     def _calc_curiase_rewards(self, states, next_states, actions):
@@ -178,6 +181,7 @@ class CuriASEAgent(ASEAgent):
     def _combine_rewards(self, task_rewards, amp_rewards, curiase_rewards):
         disc_r = amp_rewards['disc_rewards']
         enc_r = amp_rewards['enc_rewards']
+      
         combined_rewards = self._task_reward_w * task_rewards \
                          + self._disc_reward_w * disc_r \
                          + self._enc_reward_w * enc_r \
@@ -186,6 +190,7 @@ class CuriASEAgent(ASEAgent):
     
     
     def calc_gradients(self, input_dict):
+
         self.set_train()
 
         value_preds_batch = input_dict['old_values']
@@ -322,7 +327,7 @@ class CuriASEAgent(ASEAgent):
 
             world_model_loss, curiase_info = self.model.a2c_network.world_model.loss(
                 next_state_pred, next_obs_batch,
-                action_pred, action_log_probs
+                action_pred, actions_batch
             )
 
             loss = a_loss + self.critic_coef * c_loss - self.entropy_coef * entropy + self.bounds_loss_coef * b_loss \
@@ -392,6 +397,7 @@ class CuriASEAgent(ASEAgent):
     def _record_train_batch_info(self, batch_dict, train_info):
         super()._record_train_batch_info(batch_dict, train_info)
         train_info['enc_rewards'] = batch_dict['enc_rewards']
+        train_info['curiase_rewards'] = batch_dict['curiase_rewards']
 
         return
 
@@ -400,6 +406,9 @@ class CuriASEAgent(ASEAgent):
         
         self.writer.add_scalar('losses/enc_loss', torch_ext.mean_list(train_info['enc_loss']).item(), frame)
         #TODO
+        self.writer.add_scalar('losses/curiase_loss', torch_ext.mean_list(train_info['curiase_loss']).item(), frame)
+        self.writer.add_scalar('losses/curiase_inverse_loss', torch_ext.mean_list(train_info['inverse_loss']).item(), frame)
+        self.writer.add_scalar('losses/curiase_forward_loss', torch_ext.mean_list(train_info['forward_loss']).item(), frame)
 
     
         if (self._enable_amp_diversity_bonus()):
@@ -408,6 +417,10 @@ class CuriASEAgent(ASEAgent):
         enc_reward_std, enc_reward_mean = torch.std_mean(train_info['enc_rewards'])
         self.writer.add_scalar('info/enc_reward_mean', enc_reward_mean.item(), frame)
         self.writer.add_scalar('info/enc_reward_std', enc_reward_std.item(), frame)
+
+        curi_reward_std, curi_reward_mean = torch.std_mean(train_info['curiase_rewards'])
+        self.writer.add_scalar('info/curiase_reward_mean', curi_reward_mean.item(), frame)
+        self.writer.add_scalar('info/curiase_reward_std', curi_reward_std.item(), frame)
 
         if (self._enable_enc_grad_penalty()):
             self.writer.add_scalar('info/enc_grad_penalty', torch_ext.mean_list(train_info['enc_grad_penalty']).item(), frame)

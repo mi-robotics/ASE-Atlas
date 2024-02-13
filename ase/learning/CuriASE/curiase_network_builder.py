@@ -55,25 +55,39 @@ class CuriASEBuilder(ASEBuilder):
 
     class Network(ASEBuilder.Network):
         def __init__(self, params, **kwargs):
-            super().__init__()
-            self._build_world_model(self)
+            super().__init__(params, **kwargs)
+            actions_num = kwargs.get('actions_num')
+            input_shape = kwargs.get('input_shape')
+            self._build_world_model( actions_num, input_shape)
             return
         
         def load(self, params):
             super().load(params)
+
+            
            
             self._enc_units = params['enc']['units']
             self._enc_activation = params['enc']['activation']
             self._enc_initializer = params['enc']['initializer']
             self._enc_separate = params['enc']['separate']
 
+            self._world_model_config = params['world_model']
+
             return
         
-        def _build_world_model(self):
-            config = {
+        def _build_world_model(self, action_dim, obs_dims):
 
-            }
-            self.world_model = WorldModel(config)
+            self._world_model_config['forward_model'].update({
+                'obs_dim':obs_dims[0],
+                'action_dim':action_dim
+            })
+            self._world_model_config['inverse_model'].update({
+                'obs_dim':obs_dims[0],
+                'action_dim':action_dim
+            })
+
+            self.world_model = WorldModel(self._world_model_config)
+
             return
         
         def _compute_curiase_r(self, states, next_states, actions):
