@@ -35,6 +35,7 @@ from env.tasks.humanoid_strike import HumanoidStrike
 from env.tasks.humanoid_reach import HumanoidReach
 from env.tasks.humanoid_perturb import HumanoidPerturb
 from env.tasks.humanoid_view_motion import HumanoidViewMotion
+
 from env.tasks.a1.a1 import A1
 from env.tasks.a1.a1_ase import A1ASE
 from env.tasks.a1.go2_transfer import Go2Transfer

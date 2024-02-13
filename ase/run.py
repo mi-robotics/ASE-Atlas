@@ -56,6 +56,13 @@ from learning.LASD import lasd_players
 from learning.LASD import lasd_models
 from learning.LASD import lasd_network_builder
 
+from learning.CuriASE import curiase_agent
+from learning.CuriASE import curiase_player
+from learning.CuriASE import curiase_model
+from learning.CuriASE import curiase_network_builder
+
+
+
 
 from learning import hrl_agent
 from learning import hrl_players
@@ -201,6 +208,11 @@ def build_alg_runner(algo_observer):
     runner.player_factory.register_builder('lasd', lambda **kwargs : lasd_players.LASDPlayerContinuous(**kwargs))
     runner.model_builder.model_factory.register_builder('lasd', lambda network, **kwargs : lasd_models.ModelLASDContinuous(network))  
     runner.model_builder.network_factory.register_builder('lasd', lambda **kwargs : lasd_network_builder.LASDBuilder())
+
+    runner.algo_factory.register_builder('curiase', lambda **kwargs : curiase_agent.CuriASEAgent(**kwargs))
+    runner.player_factory.register_builder('curiase', lambda **kwargs : curiase_player.CuriASEPlayerContinuous(**kwargs))
+    runner.model_builder.model_factory.register_builder('curiase', lambda network, **kwargs : curiase_model.ModelCuriASEContinuous(network))  
+    runner.model_builder.network_factory.register_builder('curiase', lambda **kwargs : curiase_network_builder.CuriASEBuilder())
     
     runner.algo_factory.register_builder('hrl', lambda **kwargs : hrl_agent.HRLAgent(**kwargs))
     runner.player_factory.register_builder('hrl', lambda **kwargs : hrl_players.HRLPlayer(**kwargs))

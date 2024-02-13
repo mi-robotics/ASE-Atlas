@@ -6,7 +6,7 @@ class MLP(torch.nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.input_norm = RunningMeanStd(config['input_dim'])
+        # self.input_norm = RunningMeanStd(config['input_dim'])
 
         self.input_dim = config['input_dim']
         output_dim = config['output_dim']
@@ -32,7 +32,7 @@ class MLP(torch.nn.Module):
         return
     
     def forward(self, x):
-        return self.model(self.input_norm(x))
+        return self.model(x)
     
     
 
@@ -41,7 +41,7 @@ class InverseModel(torch.nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.input_dim = config['inverse_model']['obs_dim']
+        self.input_dim = config['inverse_model']['obs_dim']*2
         self.output_dim = config['inverse_model']['action_dim']
         self.units = config['inverse_model']['units']
         self.net = MLP({'input_dim':self.input_dim, 'output_dim':self.output_dim, 'units':self.units})
@@ -80,9 +80,9 @@ class ForwardModel(torch.nn.Module):
         Mean squared error
         """
         if reduce:
-            return (0.5 * torch.square(next_state - pred).sum(dom=-1)).mean()
+            return (0.5 * torch.square(next_state - pred).sum(dim=-1)).mean()
         else:
-            return (0.5 * torch.square(next_state - pred).sum(dom=-1))
+            return (0.5 * torch.square(next_state - pred).sum(dim=-1))
     
 
 class WorldModel(torch.nn.Module):
@@ -90,6 +90,7 @@ class WorldModel(torch.nn.Module):
     def __init__(self, config):
         super().__init__()
 
+        self.beta = float(config['beta'])
         self.inverse_model:InverseModel = InverseModel(config)
         self.forward_model:ForwardModel = ForwardModel(config)
 
@@ -105,7 +106,10 @@ class WorldModel(torch.nn.Module):
     def loss(self, next_state_pred, next_state, action_pred, action):
         inverse_loss = self.inverse_model.loss(action_pred, action)
         forward_loss = self.forward_model.loss(next_state, next_state_pred)
-        return (inverse_loss+forward_loss), {
+
+        loss = (1-self.beta)*inverse_loss + self.beta*forward_loss
+
+        return loss, {
             'inverse_loss':inverse_loss,
             'forward_loss':forward_loss
         }
@@ -115,12 +119,17 @@ class WorldModel(torch.nn.Module):
         """
         
         """
+    
         with torch.no_grad():
             next_state_pred = self.forward_model(state, action)
             forward_loss = self.forward_model.loss(next_state, next_state_pred, reduce=False)
-            reward = (torch.exp(forward_loss) - 1) / (torch.exp(forward_loss) + 1) 
+          
+            clipped_loss = torch.clamp(forward_loss, min=-10, max=10)
+           
+            reward = (torch.exp(clipped_loss) - 1) / (torch.exp(clipped_loss) + 1)
+         
             
-        return reward
+        return reward.unsqueeze(-1)
     
 
 

@@ -543,6 +543,9 @@ class A1(BaseTask):
                 lim_low[dof_offset] = curr_low
                 lim_high[dof_offset] =  curr_high
 
+   
+
+        
                 
         # mid range of the limits
         self._pd_action_offset = 0.5 * (lim_high + lim_low)
