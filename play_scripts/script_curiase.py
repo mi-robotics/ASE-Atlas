@@ -10,7 +10,8 @@ command = 'cd .. && python ./ase/run.py \
     --cfg_env ./ase/data/cfg/experiments/curiase/test1/env.yaml \
     --cfg_train ./ase/data/cfg/experiments/curiase/test1/train.yaml \
     --motion_file ./ase/data/motions/dogo/dogo_data_1.yaml \
-    --checkpoint ./output/CURIASE_TEST_1_12-17-41-01/nn/CURIASE_TEST_1.pth'
+    --checkpoint ./output/CURIASE_TEST_1_13-09-02-19/nn/CURIASE_TEST_1.pth'
+
 
 
 

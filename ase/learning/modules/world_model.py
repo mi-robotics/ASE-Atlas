@@ -80,9 +80,9 @@ class ForwardModel(torch.nn.Module):
         Mean squared error
         """
         if reduce:
-            return (0.5 * torch.square(next_state - pred).sum(dim=-1)).mean()
+            return (0.5 * torch.square(next_state - pred).mean(dim=-1)).mean()
         else:
-            return (0.5 * torch.square(next_state - pred).sum(dim=-1))
+            return (0.5 * torch.square(next_state - pred).mean(dim=-1))
     
 
 class WorldModel(torch.nn.Module):

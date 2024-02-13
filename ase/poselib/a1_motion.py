@@ -40,8 +40,9 @@ for f_name in a1_files:
                         a1_skeleton, r=rot, t=pos, is_local=True
                     )
             motion = SkeletonMotion.from_skeleton_state(a1_state, fps=50)
+            # plot_skeleton_motion_interactive(motion)
 
-            motion.to_file(f'data/a1_complex_processed{name}.npy')
+            # motion.to_file(f'data/a1_complex_processed{name}.npy')
         except:
             print('error')
             print(len(pos))
