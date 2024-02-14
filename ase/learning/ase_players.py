@@ -223,7 +223,7 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
             self._reset_latent_step_count()
 
             if (self.env.task.viewer):
-                print("Sampling new amp latents------------------------------")
+                # print("Sampling new amp latents------------------------------")
                 num_envs = self.env.task.num_envs
                 env_ids = to_torch(np.arange(num_envs), dtype=torch.long, device=self.device)
                 self._change_char_color(env_ids)
@@ -275,7 +275,7 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
             disc_pred = disc_pred.detach().cpu().numpy()[0, 0]
             disc_reward = disc_reward.cpu().numpy()[0, 0]
             enc_reward = enc_reward.cpu().numpy()[0, 0]
-            print("disc_pred: ", disc_pred, disc_reward, enc_reward)
+            # print("disc_pred: ", disc_pred, disc_reward, enc_reward)
         return
 
     def _change_char_color(self, env_ids):

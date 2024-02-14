@@ -38,6 +38,9 @@ import math
 from env.tasks.a1.a1_ase import A1ASE
 import time
 
+
+
+
 class A1ViewMotion(A1ASE):
     def __init__(self, cfg, sim_params, physics_engine, device_type, device_id, headless):
         control_freq_inv = cfg["env"]["controlFrequencyInv"]
@@ -60,6 +63,11 @@ class A1ViewMotion(A1ASE):
         self._motion_ids = torch.arange(self.num_envs, device=self.device, dtype=torch.long)
         self._motion_ids = torch.remainder(self._motion_ids, num_motions)
 
+        self._prev_position = None
+        self._current_position = None
+        
+
+    
         return
 
     def pre_physics_step(self, actions):
@@ -67,28 +75,35 @@ class A1ViewMotion(A1ASE):
         # forces = torch.zeros_like(self.actions)
         # force_tensor = gymtorch.unwrap_tensor(forces)
         # self.gym.set_dof_actuation_force_tensor(self.sim, force_tensor)
+
+
         
         return
 
     def post_physics_step(self):
-        super().post_physics_step()
         self._motion_sync()
         self._create_sphere()
-        time.sleep(0.01)
+        super().post_physics_step()
 
-        # print('SIM FOOT POS')
-        # print(self.feet_names)
-        # print(self._rigid_body_pos[0, self._key_body_ids,:])
+        self._prev_position = self._current_position.clone() if self._current_position is not None else self._current_position
 
-        # input()
-            
+        self._current_position = self._root_states[:, 0:3].clone()
 
-        #     pass
+        
+        if self.progress_buf[0]>2:
+    
+            if torch.norm(self._current_position - self._prev_position) > 0.1:
+                print('SOMETHING BAD Delta Position')
+                print(self._motion_lib._motion_files[self._motion_ids])
+                input()
+
+        if torch.any(self._rigid_body_pos[:, self.feet_indices, 2] < -0.1):
+            print(self._motion_lib._motion_files[self._motion_ids])
+            print('something BAD ground entering')
+            input()
 
 
-
-        # input()
- 
+        time.sleep(0.0)
 
         return
     

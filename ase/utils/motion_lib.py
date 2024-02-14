@@ -93,7 +93,8 @@ class MotionLib():
     def __init__(self, motion_file, dof_body_ids, dof_offsets, 
                  key_body_ids, device,
                  dof_frames=None,
-                 revolute_y_only=False
+                 revolute_y_only=False,
+                 use_classes=False
                  ):
         self._dof_body_ids = dof_body_ids
         self._dof_offsets = dof_offsets
@@ -101,6 +102,13 @@ class MotionLib():
         self._key_body_ids = torch.tensor(key_body_ids, device=device)
         self._dof_frames = dof_frames
         self._revolute_y_only = revolute_y_only
+
+        self._use_classes = use_classes
+        if self._use_classes:
+            
+            pass
+
+
     
         self._device = device
         self._load_motions(motion_file)
@@ -155,6 +163,7 @@ class MotionLib():
         return self._motion_lengths[motion_ids]
 
     def get_motion_state(self, motion_ids, motion_times):
+      
         n = len(motion_ids)
         num_bodies = self._get_num_bodies()
         num_key_bodies = self._key_body_ids.shape[0]
@@ -167,13 +176,10 @@ class MotionLib():
 
         f0l = frame_idx0 + self.length_starts[motion_ids]
         f1l = frame_idx1 + self.length_starts[motion_ids]
-    
-        # print(self.lrs.shape)
-        # print(self.lrs[2:2,:,:])
-        # print(f0l)
        
         root_pos0 = self.gts[f0l, 0]
         root_pos1 = self.gts[f1l, 0]
+
 
         root_rot0 = self.grs[f0l, 0]
         root_rot1 = self.grs[f1l, 0]

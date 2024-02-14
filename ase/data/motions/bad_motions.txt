@@ -1,0 +1,13 @@
+./a1_recording_processed/rand_1704708608.9800847_2.npy
+./a1_recording_processed/rand_1704708608.9800847_6.npy
+./a1_recording_processed/rand_1704708608.9800847_4.npy
+./a1_recording_processed/rand_1704708608.9800847_4.npy
+./a1_recording_processed/rand_1704708608.9800847_4.npy
+./a1_recording_processed/inv/rand_1704708608.9800847_5.npy
+./a1_recording_processed/inv/rand_1704708608.9800847_5.npy
+./a1_recording_processed/inv/rand_1704708608.9800847_2.npy
+./a1_recording_processed/inv/rand_1704708608.9800847_6.npy
+./a1_recording_processed/inv/rand_1704708608.9800847_4.npy
+./a1_recording_processed/inv/rand_1704708608.9800847_4.npy
+./a1_recording_processed/inv/rand_1704708608.9800847_4.npy
+./a1_recording_processed/rand_1704708608.9800847_5.npy

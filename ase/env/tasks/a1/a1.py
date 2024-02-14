@@ -345,6 +345,7 @@ class A1(BaseTask):
         # save body names from the asset
 
         body_names = self.gym.get_asset_rigid_body_names(robot_asset)
+ 
 
         self.torso_index = 0
         self.dof_names = self.gym.get_asset_dof_names(robot_asset)
@@ -399,6 +400,7 @@ class A1(BaseTask):
             a = torch.Tensor(axis) 
             a[torch.isclose(a, torch.tensor(0.0), atol=1e-6 )] = 0
             self._dof_frames[:,i] = a
+
      
         
         self._process_dof_props(dof_props_asset)
@@ -681,7 +683,7 @@ class A1(BaseTask):
             dof_pos = self._dof_pos[env_ids][:,:]
             dof_vel = self._dof_vel[env_ids][:,:]
             key_body_pos = self._rigid_body_pos[env_ids][:, self._key_body_ids, :]
-            
+          
             obs = compute_humanoid_observations(root_pos, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos,
                                                 self._local_root_obs, self._root_height_obs, self._dof_obs_size, self._dof_offsets, self._dof_frames)
             
