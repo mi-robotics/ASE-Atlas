@@ -31,7 +31,7 @@ command = 'cd .. && python ase/run.py \
     --task A1ASE \
     --cfg_env ./ase/data/cfg/experiments/velocity_a1/large/all/a1_vel_est_env.yaml \
     --cfg_train ./ase/data/cfg/experiments/velocity_a1/large/all/a1_vel_est_train.yaml \
-    --motion_file ./ase/data/motions/all_no_jump_inv.yaml \
+    --motion_file ./ase/data/motions/all_inv.yaml \
    --headless'
 
 

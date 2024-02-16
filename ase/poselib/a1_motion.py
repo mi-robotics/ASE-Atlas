@@ -12,16 +12,16 @@ from poselib.visualization.plot_simple import SimplePlotter
 
 import os
 
-a1_inv_dir = './data/a1_complex/inv'
-a1_dir = './data/a1_complex'
+a1_inv_dir = './data/a1_v3/inv'
+a1_dir = './data/a1_v3'
 
-mocap_inv_dir = './data/dog_mocap/inv'
-mocap_dir = './data/dog_mocap'
+# mocap_inv_dir = './data/a1_v3/inv'
+# mocap_dir = './data/dog_mocap'
 
 a1_files = os.listdir(a1_dir)
 a1_inv_files = os.listdir(a1_inv_dir)
-mocap_files = os.listdir(mocap_dir)
-mocap_inv_files = os.listdir(mocap_inv_dir)
+# mocap_files = os.listdir(mocap_dir)
+# mocap_inv_files = os.listdir(mocap_inv_dir)
 
 # a1 (50FPS)
 for f_name in a1_files:
@@ -44,7 +44,7 @@ for f_name in a1_files:
                 motion = SkeletonMotion.from_skeleton_state(a1_state, fps=50)
                 # plot_skeleton_motion_interactive(motion)
 
-                motion.to_file(f'data/a1_complex_processed/{name}.npy')
+                motion.to_file(f'data/a1_v3_processed/{name}.npy')
         except:
             print('error')
             print(len(pos))
@@ -74,7 +74,7 @@ for f_name in a1_inv_files:
 
                 # plot_skeleton_motion_interactive(motion)
 
-                motion.to_file(f'data/a1_complex_processed/inv/{name}.npy')
+                motion.to_file(f'data/a1_v3_processed/inv/{name}.npy')
 
         except:
             print('error')

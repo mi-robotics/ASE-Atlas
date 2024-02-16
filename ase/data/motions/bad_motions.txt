@@ -11,3 +11,7 @@
 ./a1_recording_processed/inv/rand_1704708608.9800847_4.npy
 ./a1_recording_processed/inv/rand_1704708608.9800847_4.npy
 ./a1_recording_processed/rand_1704708608.9800847_5.npy
+./a1_v3_processed/gap_0.2_1708027087.6008537_1.npy
+./a1_v3_processed/gap_0.3_1708027299.9133422_2.npy
+./a1_v3_processed/inv/gap_0.2_1708027087.6008537_1.npy
+./a1_v3_processed/inv/gap_0.3_1708027299.9133422_2.npy

@@ -65,7 +65,7 @@ class A1ViewMotion(A1ASE):
 
         self._prev_position = None
         self._current_position = None
-        
+       
 
     
         return
@@ -89,9 +89,10 @@ class A1ViewMotion(A1ASE):
 
         self._current_position = self._root_states[:, 0:3].clone()
 
-        
+      
         if self.progress_buf[0]>2:
-    
+            print(self.progress_buf[0])
+            print(self._current_position)
             if torch.norm(self._current_position - self._prev_position) > 0.1:
                 print('SOMETHING BAD Delta Position')
                 print(self._motion_lib._motion_files[self._motion_ids])

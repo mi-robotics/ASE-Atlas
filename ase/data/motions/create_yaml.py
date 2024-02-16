@@ -63,8 +63,8 @@ def create_yaml_from_directories(directory_paths, output_file, exclusion_file_pa
         file_names = [os.path.join(directory_path, f) for f in os.listdir(directory_path) 
                       if os.path.isfile(os.path.join(directory_path, f)) 
                       and f.endswith('.npy') 
-                      and not 'rand' in f
-                      and not 'dog' in f
+                    #   and not 'rand' in f
+                    #   and not 'dog' in f
                     #   and not 'biped' in f 
                     #   and not 'handstand' in f 
                     #   and not 'jump' in f 
@@ -80,8 +80,8 @@ def create_yaml_from_directories(directory_paths, output_file, exclusion_file_pa
                 inv_files = [os.path.join(inv_directory, f) for f in os.listdir(inv_directory) 
                              if os.path.isfile(os.path.join(inv_directory, f)) 
                              and f.endswith('.npy') 
-                             and not 'rand' in f
-                             and not 'dog' in f
+                            #  and not 'rand' in f
+                            #  and not 'dog' in f
                             #  and not 'biped' in f 
                             #  and not 'handstand' in f 
                             #  and not 'jump' in f 
@@ -108,7 +108,9 @@ def create_yaml_from_directories(directory_paths, output_file, exclusion_file_pa
 
 # Usage example
 exclusion_file_path = './bad_motions.txt'  # This should be the path to your file containing the filepaths to exclude
-directory_paths = ['./a1_recording_processed', './a1_complex_processed', './dog_mocap_processed']  # Replace with your directory paths
-output_file = 'all_others_inv.yaml'  # Replace with your desired output file name
+directory_paths = ['./dog_mocap_processed', './a1_v3_processed', './a1_recording_processed']  # Replace with your directory paths
+# directory_paths = ['./a1_v3_processed']  # Replace with your directory paths
+
+output_file = './all_inv.yaml'  # Replace with your desired output file name
 create_yaml_from_directories(directory_paths, output_file, exclusion_file_path)
 
