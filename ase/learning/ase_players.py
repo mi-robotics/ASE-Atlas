@@ -36,6 +36,7 @@ from matplotlib.animation import FuncAnimation
 from learning import amp_players
 from learning import ase_network_builder
 from learning.modules.velocity_estimator import VelocityEstimator
+from copy import deepcopy
 
 # ASE_LATENT_FIXING = torch.Tensor([[-0.0583, -0.2628, -0.0631, -0.0972,  0.1531,  0.1208,  0.2005, -0.3900,
 #          -0.0791, -0.2718, -0.5174, -0.1158,  0.2162,  0.0113,  0.1427,  0.0029,
@@ -65,32 +66,45 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         self._ase_latents = torch.zeros((batch_size, self._latent_dim), dtype=torch.float32,
                                          device=self.device)
         
-        print(self.env.observation_space.shape)
+        # print(self.env.observation_space.shape)
         self._obs_buffer = torch.zeros((batch_size, 3, self.env.observation_space.shape[0]), dtype=torch.float32,
                                          device=self.device)
         
         self.modules = {}
+
+        self.base_policy = torch.jit.load('/home/mcarroll/Documents/cdt-1/ASE-Atlas/policy.pt')
+        self.base_policy  = self.base_policy.cuda()
         
         try:
-            self._use_velocity_estimator = self.vec_env.env.task._use_velocity_observation
+            print( self.env.task._use_velocity_observation)
+            self._use_velocity_estimator = self.env.task._use_velocity_observation
         except:
+            print('excepted')
+            input()
             self._use_velocity_estimator = False
 
         if self._use_velocity_estimator:
+            # print('here')
+            # input()
             estimator_config = config['vel_estimator']
             self._train_with_velocity_estimate = estimator_config.get('trainWithVelocityEstimate', False) #rollouts use estimate
             self._optimize_with_velocity_estimate = estimator_config.get('optimizeWithVelocityEstimate', False) #policy optimization uses estimate
             self._vel_est_use_ase_latent = estimator_config.get('use_ase_latent', False)
             self._vel_est_asymetric_train = estimator_config.get('use_asymetric', False)
 
-            input_dim = self.vec_env.env.task._velocity_obs_buf.shape[1]
+            input_dim = self.env.task._velocity_obs_buf.shape[1]
+            # print(input_dim)
             if self._use_velocity_estimator:
                 input_dim += self._latent_dim
-
+            # print(input_dim)
+            # input()
             estimator_config.update({'input_dim':input_dim})
+
+
    
             self.vel_estimator = VelocityEstimator(estimator_config)
-            self.vel_estimator.to(self.ppo_device)
+            self.vel_estimator.eval()
+            self.vel_estimator.to(self.device)
             self.vel_optim = torch.optim.Adam(self.vel_estimator.parameters(), float(config['vel_estimator']['lr']) )
             self.vel_grad_norm = config['vel_estimator']['grad_norm']
             self._vel_obs_index = (7,10)
@@ -141,8 +155,26 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         path = fn.split('.pth')[0]
 
         for mod in self.modules.keys():
+            params = {}
+            for name, param in self.modules[mod].named_parameters():
+                params[name] = param.clone()
+       
             mod_path = f'{path}_{mod}.pth'
             self.modules[mod].load_state_dict(torch.load(mod_path))
+
+            params2 = {}
+            for name, param in self.modules[mod].named_parameters():
+                params2[name] = param.clone()
+
+            # Compare parameters
+            param_changed = False
+            for name in params:
+                if not torch.equal(params[name], params2[name]):
+                    print(f"Parameter '{name}' has changed.")
+                    param_changed = True
+
+            if not param_changed:
+                print("All parameters are unchanged after loading.")
         return
 
     def run(self):
@@ -153,11 +185,65 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
     def get_action(self, obs_dict, is_determenistic=False):
         self._update_latents()
 
-        # print(self._ase_latents)
+        # JUST FOR NOT
+        if False:
+            self.vel_estimator.eval()
 
+            # Example input
+            example_input = torch.rand(1, 145)
+
+            # Trace the model
+            traced_model = torch.jit.trace(self.vel_estimator.cpu(), example_input)
+
+    
+            # Save the scripted model
+            traced_model.save("./velocity_estimator.pt")
+            quit()
+
+        if False:
+            class CombinedModel(torch.nn.Module):
+                def __init__(self, normalizer, policy):
+                    super(CombinedModel, self).__init__()
+                    self.normalizer = normalizer.eval().cpu()
+                    self.policy = policy.eval().cpu()
+
+                def forward(self, input, latent):
+                    # Apply normalization
+                    normalized_input = self.normalizer(input)
+                    # Evaluate the policy's actor with the normalized input and latent vector
+                    mu, sigma = self.policy.eval_actor(normalized_input, latent)
+                    return mu#, sigma
+                
+            cmod = CombinedModel(self.running_mean_std,  self.model.a2c_network)
+            cmod.eval()
+       
+            example_input = torch.rand(1, 109)
+            example_latent = torch.rand(1,24)
+
+            # Trace the combined model
+            traced_combined_model = torch.jit.trace(cmod, (example_input, example_latent))
+
+            # Save the traced model
+            traced_combined_model.save("./policy.pt")
+
+            quit()
+
+        # print(self._ase_latents)
         obs = obs_dict['obs']
         if len(obs.size()) == len(self.obs_shape):
             obs = obs.unsqueeze(0)
+
+        vel_est_input = self.env.task.get_velocity_obs([0])
+  
+        if self._vel_est_use_ase_latent:
+            vel_est_input = torch.cat([vel_est_input, self._ase_latents],dim=-1)
+      
+     
+        velocity_est = self.vel_estimator.inference(vel_est_input)
+ 
+
+        #replace the velocity in the observation
+        obs[:, self._vel_obs_index[0]:self._vel_obs_index[1]] = velocity_est
 
         self.update_observation_buffer(obs)
 
@@ -166,26 +252,29 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         if PLOT_MEASUREMENTS:
             self.update_data(obs)
 
-        obs = self._preproc_obs(obs)
-        ase_latents = self._ase_latents
+        current_action = self.base_policy(obs, self._ase_latents)
+        # obs = self._preproc_obs(obs)
+        # ase_latents = self._ase_latents
 
-        input_dict = {
-            'is_train': False,
-            'prev_actions': None, 
-            'obs' : obs,
-            'rnn_states' : self.states,
-            'ase_latents': ase_latents
-        }
-        with torch.no_grad():
-            res_dict = self.model(input_dict)
-        mu = res_dict['mus']
-        action = res_dict['actions']
-        self.states = res_dict['rnn_states']
-        if is_determenistic:
-            current_action = mu
-        else:
-            current_action = action
+        # input_dict = {
+        #     'is_train': False,
+        #     'prev_actions': None, 
+        #     'obs' : obs,
+        #     'rnn_states' : self.states,
+        #     'ase_latents': ase_latents
+        # }
+        # with torch.no_grad():
+        #     res_dict = self.model(input_dict)
+        # mu = res_dict['mus']
+        # action = res_dict['actions']
+        # self.states = res_dict['rnn_states']
+        # if is_determenistic:
+        #     current_action = mu
+        # else:
+        #     current_action = action
         current_action = current_action.detach()
+        # current_action[:] = 0.
+     
         return  players.rescale_actions(self.actions_low, self.actions_high, torch.clamp(current_action, -1.0, 1.0))
 
     def update_observation_buffer(self, obs):

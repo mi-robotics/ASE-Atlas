@@ -29,6 +29,7 @@
 import numpy as np
 import os
 import yaml
+import pandas as pd
 
 from poselib.poselib.skeleton.skeleton3d import SkeletonMotion
 from poselib.poselib.core.rotation3d import *
@@ -104,8 +105,9 @@ class MotionLib():
         self._revolute_y_only = revolute_y_only
 
         self._use_classes = use_classes
+        self._classes_file = './ff'
         if self._use_classes:
-            
+            df = pd.read_pickle(self._classes_file)
             pass
 
 

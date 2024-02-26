@@ -49,6 +49,7 @@ class A1(BaseTask):
         self.sim_params = sim_params
         self.physics_engine = physics_engine
 
+ 
         #TODO: remove
         self._pd_control = self.cfg["env"]["pdControl"]
         self.power_scale = self.cfg["env"]["powerScale"]
@@ -191,7 +192,7 @@ class A1(BaseTask):
         
         self._key_body_ids = self._build_key_body_ids_tensor(self.feet_names)
 
-       
+   
         self._contact_body_ids = self._build_contact_body_ids_tensor(contact_bodies)
 
         if self.viewer != None:
@@ -342,11 +343,9 @@ class A1(BaseTask):
         dof_props_asset = self.gym.get_asset_dof_properties(robot_asset)
         rigid_shape_props_asset = self.gym.get_asset_rigid_shape_properties(robot_asset)
 
-        # save body names from the asset
-
+        # save body names from the asset -->
         body_names = self.gym.get_asset_rigid_body_names(robot_asset)
  
-
         self.torso_index = 0
         self.dof_names = self.gym.get_asset_dof_names(robot_asset)
   
@@ -401,6 +400,8 @@ class A1(BaseTask):
             a[torch.isclose(a, torch.tensor(0.0), atol=1e-6 )] = 0
             self._dof_frames[:,i] = a
 
+        print(self._dof_frames)
+        input()
      
         
         self._process_dof_props(dof_props_asset)
@@ -448,6 +449,9 @@ class A1(BaseTask):
         self.dof_limits_lower = to_torch(self.dof_limits_lower, device=self.device)
         self.dof_limits_upper = to_torch(self.dof_limits_upper, device=self.device)
 
+       
+
+
         if (self._pd_control):
             self._build_pd_action_offset_scale()
 
@@ -476,6 +480,9 @@ class A1(BaseTask):
             r = self.dof_pos_limits[i, 1] - self.dof_pos_limits[i, 0]
             self.dof_pos_limits[i, 0] = m - 0.5 * r * self.a1_cfg.rewards.soft_dof_pos_limit
             self.dof_pos_limits[i, 1] = m + 0.5 * r * self.a1_cfg.rewards.soft_dof_pos_limit
+
+   
+
         return props
     
     def _build_env(self, env_id, env_ptr, robot_asset, rigid_shape_props_asset, dof_props_asset, start_pose):
@@ -545,9 +552,6 @@ class A1(BaseTask):
                 lim_low[dof_offset] = curr_low
                 lim_high[dof_offset] =  curr_high
 
-   
-
-        
                 
         # mid range of the limits
         self._pd_action_offset = 0.5 * (lim_high + lim_low)
@@ -660,11 +664,13 @@ class A1(BaseTask):
         if self._observation_method == 'max':
             if (env_ids is None):
                 body_pos = self._rigid_body_pos
+                # body_pos[:, [2]] = 0.25
                 body_rot = self._rigid_body_rot
                 body_vel = self._rigid_body_vel
                 body_ang_vel = self._rigid_body_ang_vel
             else:
                 body_pos = self._rigid_body_pos[env_ids]
+                body_pos[:, [2]] = 0.25
                 body_rot = self._rigid_body_rot[env_ids]
                 body_vel = self._rigid_body_vel[env_ids]
                 body_ang_vel = self._rigid_body_ang_vel[env_ids]
@@ -677,18 +683,30 @@ class A1(BaseTask):
                 env_ids = torch.arange(self.num_envs)
             
             root_pos = self._rigid_body_pos[env_ids][:,0,:]
+            # root_pos[:, [2]] = 0.25
             root_rot = self._rigid_body_rot[env_ids][:,0,:]
             root_vel = self._rigid_body_vel[env_ids][:,0,:]
             root_ang_vel = self._rigid_body_ang_vel[env_ids][:,0,:]
             dof_pos = self._dof_pos[env_ids][:,:]
             dof_vel = self._dof_vel[env_ids][:,:]
+            print(dof_pos.size())
+            input()
             key_body_pos = self._rigid_body_pos[env_ids][:, self._key_body_ids, :]
           
             obs = compute_humanoid_observations(root_pos, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos,
                                                 self._local_root_obs, self._root_height_obs, self._dof_obs_size, self._dof_offsets, self._dof_frames)
             
             
+            # obs_test, local_root_vel, local_root_ang_vel, flat_local_key_pos = TEST_compute_humanoid_observations(root_pos, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos,
+            #                                     self._local_root_obs, self._root_height_obs, self._dof_obs_size, self._dof_offsets, self._dof_frames)
 
+            # obs_real = REAL_compute_humanoid_observations(
+            #     root_pos[:, [2]], root_rot, local_root_vel, local_root_ang_vel, dof_pos, dof_vel, flat_local_key_pos,  self._dof_obs_size, self._dof_offsets, self._dof_frames
+            # )
+
+            # print('------------------here------------------')
+            # print(torch.all(obs_real == obs_test))
+            # input()
 
             if self._use_noisey_measurement:
                 _dof_pos, _dof_vel, _root_ang_vel, _root_rot, _key_body_pos = self._get_noised_measurements(dof_pos, dof_vel, root_ang_vel, root_rot, key_body_pos)
@@ -714,6 +732,7 @@ class A1(BaseTask):
 
         if (env_ids is None):
             root_pos = self._rigid_body_pos[:, 0, :]
+            # root_pos[:, [2]] = 0.25
             root_rot = self._rigid_body_rot[:, 0, :]
             root_ang_vel = self._rigid_body_ang_vel[:, 0, :]
             dof_pos = self._dof_pos
@@ -721,15 +740,18 @@ class A1(BaseTask):
             key_body_pos = self._rigid_body_pos[:][:, self._key_body_ids, :]
             action_hist = self._action_history_buf[:, 0, :]
             contact_filter = self._contact_filter[:, 1, :]
+            # contact_filter[:] = 0.
         else:
             root_pos = self._rigid_body_pos[env_ids, 0, :]
+            # root_pos[:, [2]] = 0.25
             root_rot = self._rigid_body_rot[env_ids, 0, :]
             root_ang_vel = self._rigid_body_ang_vel[env_ids, 0, :]
             dof_pos = self._dof_pos[env_ids]
             dof_vel = self._dof_vel[env_ids]
             key_body_pos = self._rigid_body_pos[env_ids][:, self._key_body_ids,:]
             action_hist = self._action_history_buf[env_ids][:, 0, :]
-            contact_filter = self._contact_filter[env_ids][:, 1,:]
+            contact_filter = self._contact_filter[env_ids][:, 1,:] 
+            # contact_filter[:] = 0.
 
         if self._use_noisey_measurement:
             dof_pos, dof_vel, root_ang_vel, root_rot, key_body_pos = self._get_noised_measurements(dof_pos, dof_vel, root_ang_vel, root_rot, key_body_pos)
@@ -955,6 +977,28 @@ def dof_to_obs(pose, dof_obs_size, dof_offsets, dof_frames):
     return dof_obs
 
 @torch.jit.script
+def REAL_compute_humanoid_observations(root_h, root_rot, local_root_vel, local_root_ang_vel, dof_pos, dof_vel, local_key_body_pos,
+                                   dof_obs_size, dof_offsets, dof_frames):
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, int, List[int], Tensor) -> Tensor
+  
+    heading_rot = torch_utils.calc_heading_quat_inv(root_rot)
+
+    root_rot_obs = quat_mul(heading_rot, root_rot)
+    root_rot_obs = torch_utils.quat_to_tan_norm(root_rot_obs)
+
+    root_h_obs = root_h
+
+    dof_obs = dof_to_obs(dof_pos, dof_obs_size, dof_offsets, dof_frames)
+
+    obs = torch.cat((root_h_obs, root_rot_obs, local_root_vel, local_root_ang_vel, dof_obs, dof_vel, local_key_body_pos), dim=-1)
+    #h: 0
+    #root rot obs: 1,2,3,4,5,6
+    #root vel: 7,8,9
+    return obs
+
+torch.jit.save(REAL_compute_humanoid_observations, "./compute_observation.pt")
+
+@torch.jit.script
 def compute_humanoid_observations(root_pos, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos,
                                   local_root_obs, root_height_obs, dof_obs_size, dof_offsets, dof_frames):
     # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, bool, bool, int, List[int], Tensor) -> Tensor
@@ -990,6 +1034,43 @@ def compute_humanoid_observations(root_pos, root_rot, root_vel, root_ang_vel, do
 
     obs = torch.cat((root_h_obs, root_rot_obs, local_root_vel, local_root_ang_vel, dof_obs, dof_vel, flat_local_key_pos), dim=-1)
     return obs
+
+@torch.jit.script
+def TEST_compute_humanoid_observations(root_pos, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos,
+                                  local_root_obs, root_height_obs, dof_obs_size, dof_offsets, dof_frames):
+    # type: (Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, bool, bool, int, List[int], Tensor) -> Tuple[Tensor, Tensor, Tensor, Tensor]
+    root_h = root_pos[:, 2:3]
+    heading_rot = torch_utils.calc_heading_quat_inv(root_rot)
+
+    if (local_root_obs):
+        root_rot_obs = quat_mul(heading_rot, root_rot)
+    else:
+        root_rot_obs = root_rot
+    root_rot_obs = torch_utils.quat_to_tan_norm(root_rot_obs)
+    
+    if (not root_height_obs):
+        root_h_obs = torch.zeros_like(root_h)
+    else:
+        root_h_obs = root_h
+    
+    local_root_vel = quat_rotate(heading_rot, root_vel)
+    local_root_ang_vel = quat_rotate(heading_rot, root_ang_vel)
+
+    root_pos_expand = root_pos.unsqueeze(-2)
+    local_key_body_pos = key_body_pos - root_pos_expand
+    
+    heading_rot_expand = heading_rot.unsqueeze(-2)
+    heading_rot_expand = heading_rot_expand.repeat((1, local_key_body_pos.shape[1], 1))
+    flat_end_pos = local_key_body_pos.view(local_key_body_pos.shape[0] * local_key_body_pos.shape[1], local_key_body_pos.shape[2])
+    flat_heading_rot = heading_rot_expand.view(heading_rot_expand.shape[0] * heading_rot_expand.shape[1], 
+                                               heading_rot_expand.shape[2])
+    local_end_pos = quat_rotate(flat_heading_rot, flat_end_pos)
+    flat_local_key_pos = local_end_pos.view(local_key_body_pos.shape[0], local_key_body_pos.shape[1] * local_key_body_pos.shape[2])
+
+    dof_obs = dof_to_obs(dof_pos, dof_obs_size, dof_offsets, dof_frames)
+
+    obs = torch.cat((root_h_obs, root_rot_obs, local_root_vel, local_root_ang_vel, dof_obs, dof_vel, flat_local_key_pos), dim=-1)
+    return obs, local_root_vel, local_root_ang_vel, flat_local_key_pos
 
 @torch.jit.script
 def compute_humanoid_observations_max(body_pos, body_rot, body_vel, body_ang_vel, local_root_obs, root_height_obs):
@@ -1072,6 +1153,25 @@ def compute_velocity_observation(root_pos, root_rot, root_ang_vel, dof_pos, dof_
     obs = torch.cat((root_rot_obs, local_root_ang_vel, dof_obs, dof_vel, flat_local_key_pos, action_hist, contact_filter), dim=-1)
     return obs
 
+
+@torch.jit.script
+def REAL_compute_velocity_observation( root_rot, local_root_ang_vel, dof_pos, dof_vel, local_key_body_pos,
+                                 action_hist, contact_filter, dof_obs_size, dof_offsets, dof_frames):
+    # type: ( Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, int, List[int], Tensor) -> Tensor
+
+
+    roll, pitch, _ = get_euler_xyz(root_rot)
+    yaw = torch.zeros_like(roll, device=roll.device, dtype=roll.dtype)
+ 
+    imu = quat_from_euler_xyz(roll, pitch, yaw)
+    root_rot_obs = torch_utils.quat_to_tan_norm(imu)
+
+    dof_obs = dof_to_obs(dof_pos, dof_obs_size, dof_offsets, dof_frames)
+
+    obs = torch.cat((root_rot_obs, local_root_ang_vel, dof_obs, dof_vel, local_key_body_pos, action_hist, contact_filter), dim=-1)
+    return obs
+
+torch.jit.save(REAL_compute_velocity_observation, "./compute_velocity_observation.pt")
 
 @torch.jit.script
 def compute_humanoid_reward(obs_buf):

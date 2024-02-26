@@ -25,7 +25,8 @@ env:
 
   asset:
     assetRoot: "ase/data/assets"
-    assetFileName: "unitree_go2/go2_description/urdf/go2_description.urdf"
+    assetFileName: "parkour/go1/urdf/go1_new.urdf"    
+    # assetFileName: "unitree_go2/go2_description/urdf/go2_description.urdf"
 
   plane:
     staticFriction: 1.0

@@ -78,6 +78,7 @@ class ASEBuilder(amp_network_builder.AMPBuilder):
             if self.is_continuous:
                 self.mu = torch.nn.Linear(actor_out_size, actions_num)
                 self.mu_act = self.activations_factory.create(self.space_config['mu_activation']) 
+              
                 mu_init = self.init_factory.create(**self.space_config['mu_init'])
                 self.sigma_act = self.activations_factory.create(self.space_config['sigma_activation']) 
 

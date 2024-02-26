@@ -288,6 +288,23 @@ class Go2Transfer(A1ASE):
         [-1.5359001, 5.5502],
         [-3.099688, -0.46077195]]
 
+        go1 = [
+            [-1.466077,  1.466077],
+            [-1.389282,  3.693117],
+            [-3.099705, -0.460767],
+            [-1.466077,  1.466077],
+            [-1.389282,  3.693117],
+            [-3.099705, -0.460767],
+            [-1.466077,  1.466077],
+            [-1.389282,  3.693117],
+            [-3.099705, -0.460767],
+            [-1.466077,  1.466077],
+            [-1.389282,  3.693117],
+            [-3.099705, -0.460767],
+        ]
+
+        go2 = go1
+
         """
         given 0.2
         jarget = mean-0.2*(diff)
@@ -311,18 +328,18 @@ class Go2Transfer(A1ASE):
         _a1_scale_diffs = np.array(scale_diffs)
         _a1_mean_deltas = np.array(mean_deltas)
 
-        # target = 0.4
+        # theta = 1
 
         # for i in range(len(a1)):
         #     a1_offset = (a1[i][1] + a1[i][0])/2
         #     a1_scale = (a1[i][1] - a1[i][0])/2
-        #     a1_target = 0.4 * (a1_scale) + a1_offset
+        #     a1_target = theta * (a1_scale) + a1_offset
 
         #     go_offset = (go2[i][1] + go2[i][0])/2
         #     go_scale = (go2[i][1] - go2[i][0])/2
-        #     go_target = 0.4 * (go_scale) + go_offset
+        #     go_target = theta * (go_scale) + go_offset
 
-        #     go_remapped = 0.4 * (go_scale*scale_diffs[i]) + mean_deltas[i] + go_offset
+        #     go_remapped = theta * (go_scale*scale_diffs[i]) + mean_deltas[i] + go_offset
             
         #     print('targets')
         #     print(a1_target)
@@ -330,6 +347,8 @@ class Go2Transfer(A1ASE):
         #     print(go_remapped)
 
         #     input()
+
+    
 
         return _a1_scale_diffs, _a1_mean_deltas
     
@@ -340,7 +359,9 @@ class Go2Transfer(A1ASE):
         asset_file = self.cfg["env"]["asset"]["assetFileName"]
         num_key_bodies = len(key_bodies)
         print(asset_file)
-        if  (asset_file == "unitree_go2/go2_description/urdf/go2_description.urdf"):
+        # if  (asset_file == "unitree_go2/go2_description/urdf/go2_description.urdf"):        
+        if  (asset_file == "parkour/go1/urdf/go1_new.urdf"):
+
             self._dof_body_ids = [1,2,3,5,6,7,9,10,11,13,14,15] 
             self._dof_offsets = list(np.arange(start=0, stop=(13), step=1))
             self._dof_obs_size = 12*6
@@ -403,6 +424,12 @@ class Go2Transfer(A1ASE):
                 lim_low[dof_offset] = curr_low
                 lim_high[dof_offset] =  curr_high
 
+        # np.set_printoptions(precision=6)
+        # print(lim_high)
+        # print(lim_low)
+        # print(np.column_stack((lim_low, lim_high)))
+        # input()
+
         # mid range of the limits
         self._pd_action_offset = 0.5 * (lim_high + lim_low)
         # max direction either side of the limits from the mid
@@ -413,15 +440,12 @@ class Go2Transfer(A1ASE):
         self._pd_action_offset += mean_delata
         self._pd_action_scale *= scale_diff
 
-        print(self._pd_action_offset.shape)
-        print(self._pd_action_scale.shape)
-        print(scale_diff.shape)
-        print(mean_delata.shape)
-        input()
+      
  
         self._pd_action_offset = to_torch(self._pd_action_offset, device=self.device)
         self._pd_action_scale = to_torch(self._pd_action_scale, device=self.device)
 
+ 
         return
     
 

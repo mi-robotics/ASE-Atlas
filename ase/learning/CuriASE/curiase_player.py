@@ -8,4 +8,5 @@ import learning.ase_players as ase_player
 class CuriASEPlayerContinuous(ase_player.ASEPlayer):
     def __init__(self, config):
         super().__init__(config)
+        
         return

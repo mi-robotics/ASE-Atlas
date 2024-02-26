@@ -29,6 +29,7 @@ class VecTask():
         self.act_space = spaces.Box(np.ones(self.num_actions) * -1., np.ones(self.num_actions) * 1.)
 
         self.clip_obs = clip_observations
+      
         self.clip_actions = clip_actions
         self.rl_device = rl_device
 

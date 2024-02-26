@@ -84,6 +84,7 @@ class HumanoidAMP(Humanoid):
         amp_obs_flat = self._amp_obs_buf.view(-1, self.get_num_amp_obs())
         self.extras["amp_obs"] = amp_obs_flat
 
+
         return
 
     def get_num_amp_obs(self):
