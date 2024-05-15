@@ -1,3 +1,4 @@
 {
-    "python.pythonPath": "/home/mcarroll/miniconda3/envs/isaac/bin/python"
+    "python.pythonPath": "/home/mcarroll/miniconda3/envs/isaac/bin/python",
+    "ros.distro": "humble"
 }

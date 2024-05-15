@@ -102,7 +102,7 @@ class CommonPlayer(players.PpoPlayerContinuous):
                 cr += r
                 steps += 1
   
-                self._post_step(info)
+                self._post_step(info, obs_dict)
 
                 if render:
                     self.env.render(mode = 'human')
@@ -198,7 +198,7 @@ class CommonPlayer(players.PpoPlayerContinuous):
         obs = self.env.reset(env_ids)
         return self.obs_to_torch(obs)
 
-    def _post_step(self, info):
+    def _post_step(self, info, obs):
         return
 
     def _build_net_config(self):

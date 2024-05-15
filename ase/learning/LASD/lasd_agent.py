@@ -49,8 +49,22 @@ class LASDAgent(ASEAgent):
         if not self._use_lsgm:
             self._vae_altent_dim = self.model.a2c_network.actor.latent_dim
             self._vae_beta_coef = self.model.a2c_network.actor.beta
+
+        else:
+            self.optimizer = torch.optim.Adam(
+                self.get_main_params(), 
+                float(self.last_lr), eps=1e-08, weight_decay=self.weight_decay)
+            
+            self.score_optim = torch.optim.Adam(
+                self.get_score_params(),lr=1e-4,eps=1e-08,weight_decay=1e-6)
         return
     
+    def get_main_params(self):
+        main_params = [param for name, param in self.model.named_parameters() if 'score_model' not in name]
+        return main_params
+    
+    def get_score_params(self):
+        return self.model.a2c_network.actor.score_model.parameters()
 
     def play_steps(self):
         self.set_eval()
@@ -216,6 +230,10 @@ class LASDAgent(ASEAgent):
             vae_recon = res_dict['vae_recon']
 
             a_info = self._actor_loss(old_action_log_probs_batch, action_log_probs, advantage, curr_e_clip)
+            if torch.any(a_info['ratio'] > 1.5) or torch.any(a_info['ratio'] < 0.5):
+                lr_mul *= 1.1 
+                curr_e_clip = lr_mul * self.e_clip
+
             a_loss = a_info['actor_loss']
             a_clipped = a_info['actor_clipped'].float()
 
@@ -223,7 +241,6 @@ class LASDAgent(ASEAgent):
             c_loss = c_info['critic_loss']
 
             b_loss = self.bound_loss(mu)
-
             c_loss = torch.mean(c_loss)
             a_loss = torch.sum(rand_action_mask * a_loss) / rand_action_sum
             entropy = torch.sum(rand_action_mask * entropy) / rand_action_sum
@@ -245,7 +262,7 @@ class LASDAgent(ASEAgent):
             if self._use_lsgm:
                 vae_loss, vae_recon_loss, vae_info = self.model.a2c_network.actor.vae_loss_algo2(vae_latents, vae_params, vae_recon, batch_dict['ase_latents'], obs_batch, next_obs_batch)
                 loss = a_loss + self.critic_coef * c_loss - self.entropy_coef * entropy + self.bounds_loss_coef * b_loss \
-                    + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss*0.5
+                    + self._disc_coef * disc_loss + self._enc_coef * enc_loss + vae_loss
                 
               
                 gen_loss_info = {
@@ -266,6 +283,10 @@ class LASDAgent(ASEAgent):
                 diversity_loss = torch.sum(rand_action_mask * diversity_loss) / rand_action_sum
                 loss += self._amp_diversity_bonus * diversity_loss
                 a_info['amp_diversity_loss'] = diversity_loss
+
+                
+
+                
                 
             a_info['actor_loss'] = a_loss
             a_info['actor_clip_frac'] = a_clip_frac
@@ -281,70 +302,39 @@ class LASDAgent(ASEAgent):
       
         
         # |||||||||||||||| Step 1 LSGM Update ||||||||||||||||||
-        self._set_freeze_score_params(False)
+        # self._set_freeze_score_params(False)
         self.scaler.scale(loss).backward()
         if self.truncate_grads:
             if self.multi_gpu:
                 raise Exception('Removed this code')
             else:
                 self.scaler.unscale_(self.optimizer)
-                nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_norm)
+                nn.utils.clip_grad_norm_(self.get_main_params(), self.grad_norm)
         
-   
         self.scaler.step(self.optimizer)
-        self._set_freeze_score_params(True)
+        # self._set_freeze_score_params(True)
     
         if self._use_lsgm:
             # |||||||||||||||| Step 2 LSGM Update ||||||||||||||||||
-            self.optimizer.zero_grad()
+            self.score_optim.zero_grad()
 
-            # model_parameters = {}
-    
-            # for name, parameter in self.model.named_parameters():
-            #     print(name)
-            #     model_parameters[name] = parameter.clone().detach().cpu().numpy()
-
-            score_loss = self.model.a2c_network.actor.score_loss_algo2(vae_latents)
+            score_loss = self.model.a2c_network.actor.score_loss_algo2(vae_latents, ase_latents)
             gen_loss_info['score_loss'] = score_loss
             
-            self._set_freeze_all_params(False)
-            self._set_freeze_score_params(True) #unfreeze the score model
+            score_loss.backward()
+            # self._set_freeze_all_params(False)
+            # self._set_freeze_score_params(True) #unfreeze the score model
 
-            self.scaler.scale(score_loss).backward()
-            if self.truncate_grads:
-                if self.multi_gpu:
-                    raise Exception('Removed this code')
-                else:
-                    self.scaler.unscale_(self.optimizer)
-                    nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_norm)
-                
-            self.scaler.step(self.optimizer)
-            self._set_freeze_all_params(True)
+            nn.utils.clip_grad_norm_(
+                self.get_score_params(), 
+                self.grad_norm)
+            
 
-            # for name, parameter in self.model.named_parameters():
-            #     param = parameter.clone().detach().cpu().numpy()
-            #     if 'score_model' in name:
-            #         print((name))
-            #         #should not have changes
-            #         assert not np.array_equal(model_parameters[name], param)
-            #     else:
-            #         #should have changed
-            #         print(name)
-            #         assert np.array_equal(model_parameters[name], param)
+            self.score_optim.step()
+    
+            # self._set_freeze_all_params(True)
 
         self.scaler.update()
-
-        #Todo the problem with this is that is varry the the number of minibatcvh
-        #this also depend on the number of envioronemnts
-        # if self._use_score_target:
-        #     tau = 0.001
-        #     with torch.no_grad():
-        #         target_model = self.model.a2c_network.actor.score_target
-        #         score_model = self.model.a2c_network.actor.score_model
-        #         for target_param, policy_param in zip(target_model.parameters(), score_model.parameters()):
-        #             target_param.data.copy_(tau * policy_param.data + (1.0 - tau) * target_param.data)
-
-     
 
         with torch.no_grad():
             reduce_kl = not self.is_rnn
@@ -371,11 +361,11 @@ class LASDAgent(ASEAgent):
         return
     
     def _post_update_callback(self, i, total_iterations ):
-        max_itr = 12
+        max_itr = 1
         freq = total_iterations/max_itr
         
         if self._use_score_target:
-            tau = 0.01
+            tau = 1
             #total/max = 4
             if i%freq == 0:
                 with torch.no_grad():
@@ -386,20 +376,20 @@ class LASDAgent(ASEAgent):
 
         return
     
-    def _set_freeze_score_params(self, set_freeze):
-        if self._use_lsgm:
-            for param in self.model.a2c_network.actor.score_model.parameters():
-                param.requires_grad = set_freeze
+    # def _set_freeze_score_params(self, set_freeze):
+    #     if self._use_lsgm:
+    #         for param in self.model.a2c_network.actor.score_model.parameters():
+    #             param.requires_grad = set_freeze
 
-            if self._use_score_target:
-                for param in self.model.a2c_network.actor.score_target.parameters():
-                    param.requires_grad = set_freeze
-        return
+    #         if self._use_score_target:
+    #             for param in self.model.a2c_network.actor.score_target.parameters():
+    #                 param.requires_grad = set_freeze
+    #     return
     
-    def _set_freeze_all_params(self, set_freeze):
-        for param in self.model.parameters():
-            param.requires_grad = set_freeze
-        return
+    # def _set_freeze_all_params(self, set_freeze):
+    #     for param in self.model.parameters():
+    #         param.requires_grad = set_freeze
+    #     return
 
     
     def _vae_kl_loss(self, latents, params):
@@ -436,6 +426,31 @@ class LASDAgent(ASEAgent):
         diversity_loss = torch.square(self._amp_diversity_tar - diversity_bonus)
 
         return diversity_loss
+    
+    def _diversity_loss_v2(self, obs, vae_params, ase_latents):
+        assert(self.model.a2c_network.is_continuous)
+
+        n = obs.shape[0]
+        assert(n == vae_params.shape[0])
+    
+        new_z = self._sample_latents(n)
+
+        net_dict = self._eval_actor(obs=obs, ase_latents=new_z)
+
+        vae_mu, _ = vae_params.chunk(2, dim=-1)
+        mu, _ = net_dict['vae_params'].chunk(2, dim=-1)
+
+        a_diff = vae_mu - mu
+        a_diff = torch.mean(torch.square(a_diff), dim=-1)
+
+        z_diff = new_z * ase_latents
+        z_diff = torch.sum(z_diff, dim=-1)
+        z_diff = 0.5 - 0.5 * z_diff
+
+        diversity_bonus = a_diff / (z_diff + 1e-5)
+        diversity_loss = torch.square(self._amp_diversity_tar - diversity_bonus)
+
+        return -diversity_bonus
 
 
 
@@ -457,6 +472,7 @@ class LASDAgent(ASEAgent):
          
         if (self._enable_amp_diversity_bonus()):
             self.writer.add_scalar('losses/amp_diversity_loss', torch_ext.mean_list(train_info['amp_diversity_loss']).item(), frame)
+            # self.writer.add_scalar('losses/amp_diversity_loss_v2', torch_ext.mean_list(train_info['amp_diversity_loss_v2']).item(), frame)
         
         enc_reward_std, enc_reward_mean = torch.std_mean(train_info['enc_rewards'])
         self.writer.add_scalar('info/enc_reward_mean', enc_reward_mean.item(), frame)

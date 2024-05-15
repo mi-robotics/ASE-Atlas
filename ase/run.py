@@ -61,6 +61,16 @@ from learning.CuriASE import curiase_player
 from learning.CuriASE import curiase_model
 from learning.CuriASE import curiase_network_builder
 
+from learning.TripASE import trip_agent
+from learning.TripASE import trip_player
+from learning.TripASE import trip_model
+from learning.TripASE import trip_network_builder
+
+from learning.CASE import case_agent
+from learning.CASE import case_player
+from learning.CASE import case_model
+from learning.CASE import case_network_builder
+
 
 
 
@@ -214,6 +224,18 @@ def build_alg_runner(algo_observer):
     runner.model_builder.model_factory.register_builder('curiase', lambda network, **kwargs : curiase_model.ModelCuriASEContinuous(network))  
     runner.model_builder.network_factory.register_builder('curiase', lambda **kwargs : curiase_network_builder.CuriASEBuilder())
     
+    runner.algo_factory.register_builder('tripase', lambda **kwargs : trip_agent.TripASEAgent(**kwargs))
+    runner.player_factory.register_builder('tripase', lambda **kwargs : trip_player.TripASEPlayerContinuous(**kwargs))
+    runner.model_builder.model_factory.register_builder('tripase', lambda network, **kwargs : trip_model.ModelTripASEContinuous(network))  
+    runner.model_builder.network_factory.register_builder('tripase', lambda **kwargs : trip_network_builder.TripASEBuilder())
+
+    runner.algo_factory.register_builder('case', lambda **kwargs : case_agent.CASEAgent(**kwargs))
+    runner.player_factory.register_builder('case', lambda **kwargs : case_player.CASEPlayerContinuous(**kwargs))
+    runner.model_builder.model_factory.register_builder('case', lambda network, **kwargs : case_model.ModelCASEContinuous(network))  
+    runner.model_builder.network_factory.register_builder('case', lambda **kwargs : case_network_builder.CASEBuilder())
+    
+
+
     runner.algo_factory.register_builder('hrl', lambda **kwargs : hrl_agent.HRLAgent(**kwargs))
     runner.player_factory.register_builder('hrl', lambda **kwargs : hrl_players.HRLPlayer(**kwargs))
     runner.model_builder.model_factory.register_builder('hrl', lambda network, **kwargs : hrl_models.ModelHRLContinuous(network))  

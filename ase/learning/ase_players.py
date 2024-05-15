@@ -233,17 +233,17 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         if len(obs.size()) == len(self.obs_shape):
             obs = obs.unsqueeze(0)
 
-        vel_est_input = self.env.task.get_velocity_obs([0])
+        # vel_est_input = self.env.task.get_velocity_obs([0])
   
-        if self._vel_est_use_ase_latent:
-            vel_est_input = torch.cat([vel_est_input, self._ase_latents],dim=-1)
+        # if self._vel_est_use_ase_latent:
+        #     vel_est_input = torch.cat([vel_est_input, self._ase_latents],dim=-1)
       
      
-        velocity_est = self.vel_estimator.inference(vel_est_input)
+        # velocity_est = self.vel_estimator.inference(vel_est_input)
  
 
-        #replace the velocity in the observation
-        obs[:, self._vel_obs_index[0]:self._vel_obs_index[1]] = velocity_est
+        # #replace the velocity in the observation
+        # obs[:, self._vel_obs_index[0]:self._vel_obs_index[1]] = velocity_est
 
         self.update_observation_buffer(obs)
 
@@ -252,26 +252,26 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         if PLOT_MEASUREMENTS:
             self.update_data(obs)
 
-        current_action = self.base_policy(obs, self._ase_latents)
-        # obs = self._preproc_obs(obs)
-        # ase_latents = self._ase_latents
+        # current_action = self.base_policy(obs, self._ase_latents)
+        obs = self._preproc_obs(obs)
+        ase_latents = self._ase_latents
 
-        # input_dict = {
-        #     'is_train': False,
-        #     'prev_actions': None, 
-        #     'obs' : obs,
-        #     'rnn_states' : self.states,
-        #     'ase_latents': ase_latents
-        # }
-        # with torch.no_grad():
-        #     res_dict = self.model(input_dict)
-        # mu = res_dict['mus']
-        # action = res_dict['actions']
-        # self.states = res_dict['rnn_states']
-        # if is_determenistic:
-        #     current_action = mu
-        # else:
-        #     current_action = action
+        input_dict = {
+            'is_train': False,
+            'prev_actions': None, 
+            'obs' : obs,
+            'rnn_states' : self.states,
+            'ase_latents': ase_latents
+        }
+        with torch.no_grad():
+            res_dict = self.model(input_dict)
+        mu = res_dict['mus']
+        action = res_dict['actions']
+        self.states = res_dict['rnn_states']
+        if is_determenistic:
+            current_action = mu
+        else:
+            current_action = action
         current_action = current_action.detach()
         # current_action[:] = 0.
      

@@ -45,7 +45,7 @@ class CuriASEAgent(ASEAgent):
         super().__init__(base_name, config)
 
         self._use_privilliged_world_model = True
-        self._curiase_reward_w = 0.1
+        self._curiase_reward_w = 0.5
         self._curiase_coef = 0.5
         return
     
@@ -176,6 +176,9 @@ class CuriASEAgent(ASEAgent):
         """
         
         """
+        # states_ = states.reshape(states.size(0)*states.size(1), -1)
+        states = self._preproc_obs(states)
+        next_states = self._preproc_obs(next_states)
         return self.model.a2c_network._compute_curiase_r(states, next_states, actions)
     
     def _combine_rewards(self, task_rewards, amp_rewards, curiase_rewards):
@@ -325,11 +328,16 @@ class CuriASEAgent(ASEAgent):
             enc_info = self._enc_loss(enc_pred, enc_latents, batch_dict['amp_obs'], enc_loss_mask)
             enc_loss = enc_info['enc_loss']
 
+            # print('in eval--------------------------------')
+            # print(next_state_pred.shape)
+            # print(next_obs_batch.shape)
+
             world_model_loss, curiase_info = self.model.a2c_network.world_model.loss(
                 next_state_pred, next_obs_batch,
                 action_pred, actions_batch
             )
-
+            # print(curiase_info)
+            # print('end eval--------------------------------')
             loss = a_loss + self.critic_coef * c_loss - self.entropy_coef * entropy + self.bounds_loss_coef * b_loss \
                  + self._disc_coef * disc_loss + self._enc_coef * enc_loss \
                  + self._curiase_coef * world_model_loss

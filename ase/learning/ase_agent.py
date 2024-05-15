@@ -155,11 +155,13 @@ class ASEAgent(amp_agent.AMPAgent):
                     vel_est_input = self.velocity_obs
                     if self._vel_est_use_ase_latent:
                         vel_est_input = torch.cat([vel_est_input, self._ase_latents],dim=-1)
+
                     velocity_est = self.vel_estimator.inference(vel_est_input)
 
                     #replace the velocity in the observation
                     obs_est = deepcopy(self.obs)
-                    obs_est['obs'][:, self._vel_obs_index[0]:self._vel_obs_index[1]] = velocity_est
+                    obs_est['obs'][:, self._vel_obs_index[0]:self._vel_obs_index[1]] = velocity_est[:, 1:]
+                    obs_est['obs'][:, 0] = velocity_est[:, 0]
 
                     if self._vel_est_asymetric_train:
                         #use the un-noised / no estimate critic observation to get action values
@@ -310,7 +312,10 @@ class ASEAgent(amp_agent.AMPAgent):
             if self._vel_est_use_ase_latent:
                 vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents']], dim=-1)
 
-            obs_batch[:, self._vel_obs_index[0]:self._vel_obs_index[1]] = self.vel_estimator.inference(vel_est_input)
+            state_est = self.vel_estimator.inference(vel_est_input)
+            obs_batch[:, self._vel_obs_index[0]:self._vel_obs_index[1]] = state_est[:, 1:]            
+            obs_batch[:, 0] = state_est[:, 0]
+
 
             if self._vel_est_asymetric_train:
                 critic_obs = input_dict['critic_obs']
@@ -322,8 +327,11 @@ class ASEAgent(amp_agent.AMPAgent):
             if self._vel_est_use_ase_latent:
                 vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents']], dim=-1)
 
+            h_gt = critic_obs[:, 0]
             velocity_gt = critic_obs[:, self._vel_obs_index[0]:self._vel_obs_index[1]]
-            vel_loss = self.vel_estimator.loss(self.vel_estimator(vel_est_input), velocity_gt)
+            gt = torch.cat((h_gt.unsqueeze(-1), velocity_gt), dim=-1)
+            
+            vel_loss = self.vel_estimator.loss(self.vel_estimator(vel_est_input), gt)
             self.vel_optim.zero_grad()
             vel_loss.backward()
             torch.nn.utils.clip_grad_norm_(self.vel_estimator.parameters(), self.vel_grad_norm)

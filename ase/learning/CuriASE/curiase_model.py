@@ -26,7 +26,7 @@ class ModelCuriASEContinuous(ModelASEContinuous):
                 result["enc_pred"] = enc_pred
                 result['next_state_pred'], result['action_pred'] = self.a2c_network.world_model.forward(
                     input_dict['next_obses'],
-                    input_dict['obs'],
+                    input_dict['critic_obs'],
                     input_dict['actions']
                 )
 

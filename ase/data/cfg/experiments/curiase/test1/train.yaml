@@ -61,7 +61,7 @@ params:
   load_checkpoint: False
 
   config:
-    name: CURIASE_TEST_1
+    name: IROS_LARGE_CURIASE
     env_name: rlgpu
     multi_gpu: False
     ppo: True
@@ -77,7 +77,7 @@ params:
     lr_schedule: constant
     kl_threshold: 0.01
     score_to_win: 20000
-    max_epochs: 75000
+    max_epochs: 500000
     save_best_after: 50
     save_frequency: 50
     print_stats: True

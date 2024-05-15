@@ -126,6 +126,7 @@ class Serializable:
                 d = json.load(f, object_hook=json_numpy_obj_hook)
         elif path.endswith(".npy"):
             d = np.load(path, allow_pickle=True).item()
+           
         else:
             assert False, "failed to load {} from {}".format(cls.__name__, path)
         assert d["__name__"] == cls.__name__, "the file belongs to {}, not {}".format(

@@ -80,9 +80,9 @@ class ForwardModel(torch.nn.Module):
         Mean squared error
         """
         if reduce:
-            return (0.5 * torch.square(next_state - pred).mean(dim=-1)).mean()
+            return (0.5 * torch.square(next_state - pred).sum(dim=-1)).mean()
         else:
-            return (0.5 * torch.square(next_state - pred).mean(dim=-1))
+            return (0.5 * torch.square(next_state - pred).sum(dim=-1))
     
 
 class WorldModel(torch.nn.Module):
@@ -106,13 +106,14 @@ class WorldModel(torch.nn.Module):
     def loss(self, next_state_pred, next_state, action_pred, action):
         inverse_loss = self.inverse_model.loss(action_pred, action)
         forward_loss = self.forward_model.loss(next_state, next_state_pred)
-
+  
         loss = (1-self.beta)*inverse_loss + self.beta*forward_loss
 
         return loss, {
             'inverse_loss':inverse_loss,
             'forward_loss':forward_loss
         }
+
     
 
     def reward(self, next_state, state, action):
@@ -121,13 +122,27 @@ class WorldModel(torch.nn.Module):
         """
     
         with torch.no_grad():
+            s0, s1, s2 = state.shape
+            state = state.reshape(s0*s1, s2)
+            action = action.reshape(s0*s1, -1)
+            next_state = next_state.reshape(s0*s1, -1)
+
             next_state_pred = self.forward_model(state, action)
-            forward_loss = self.forward_model.loss(next_state, next_state_pred, reduce=False)
-          
-            clipped_loss = torch.clamp(forward_loss, min=-10, max=10)
-           
-            reward = (torch.exp(clipped_loss) - 1) / (torch.exp(clipped_loss) + 1)
          
+            forward_loss = self.forward_model.loss(next_state, next_state_pred, reduce=False)
+            
+            print('wm loss')
+            print(forward_loss.mean())
+
+            forward_loss = forward_loss.clamp(min=-10, max=10)
+        
+            reward = (torch.exp(forward_loss) - 1) / (torch.exp(forward_loss) + 1)
+            print(reward.mean())
+            print(reward.shape)
+
+            reward = reward.reshape(s0,s1)
+
+        
             
         return reward.unsqueeze(-1)
     

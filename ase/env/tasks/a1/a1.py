@@ -400,8 +400,7 @@ class A1(BaseTask):
             a[torch.isclose(a, torch.tensor(0.0), atol=1e-6 )] = 0
             self._dof_frames[:,i] = a
 
-        print(self._dof_frames)
-        input()
+
      
         
         self._process_dof_props(dof_props_asset)
@@ -689,8 +688,7 @@ class A1(BaseTask):
             root_ang_vel = self._rigid_body_ang_vel[env_ids][:,0,:]
             dof_pos = self._dof_pos[env_ids][:,:]
             dof_vel = self._dof_vel[env_ids][:,:]
-            print(dof_pos.size())
-            input()
+           
             key_body_pos = self._rigid_body_pos[env_ids][:, self._key_body_ids, :]
           
             obs = compute_humanoid_observations(root_pos, root_rot, root_vel, root_ang_vel, dof_pos, dof_vel, key_body_pos,
@@ -1187,8 +1185,8 @@ def compute_humanoid_reset(reset_buf, progress_buf, contact_buf, contact_body_id
 
     if (enable_early_termination):
         masked_contact_buf = contact_buf.clone()
-        masked_contact_buf[:, contact_body_ids, :] = 0
-        fall_contact = torch.any(torch.abs(masked_contact_buf) > 0.1, dim=-1)
+        masked_contact_buf[:, 1:, :] = 0
+        fall_contact = torch.any(torch.abs(masked_contact_buf) > 1, dim=-1)
         fall_contact = torch.any(fall_contact, dim=-1)
 
         body_height = rigid_body_pos[..., 2]

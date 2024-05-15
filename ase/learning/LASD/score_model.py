@@ -12,6 +12,8 @@ class ScoreMLP(torch.nn.Module):
 
 
         self.latent_dim = config['vae']['latent_dim']
+        self.ase_latent_dim = 64
+        self._use_ase_latent = True
         self.time_embd_dim = config['score_model']['time_embd_dim']      
         self.units = config['score_model']['units']
         self.activation = self._get_activation(config['score_model']['activation'])
@@ -24,7 +26,7 @@ class ScoreMLP(torch.nn.Module):
             init = init*torch.ones((1, self.latent_dim))
             self._mixing_logit = torch.nn.Parameter(init, requires_grad=True)
 
-        self.input_dim = self.latent_dim + self.time_embd_dim
+        self.input_dim = self.latent_dim + self.time_embd_dim + (self.ase_latent_dim if self._use_ase_latent else 0)
 
         self._build_network()
 
@@ -60,13 +62,16 @@ class ScoreMLP(torch.nn.Module):
             return torch.nn.Sigmoid()
         
 
-    def forward(self, noised_latent, t):
+    def forward(self, noised_latent, t, ase_latent):
 
         #get positional embeddings
         emb_t = get_timestep_embedding(t, embed_dim=self.time_embd_dim, dtype=noised_latent.dtype)
 
         #concat latents with time embeddings
-        net_in = torch.cat([noised_latent,emb_t], dim=1)
+        if self._use_ase_latent:
+            net_in = torch.cat([noised_latent, ase_latent, emb_t], dim=1)
+        else:
+            net_in = torch.cat([noised_latent,emb_t], dim=1)
 
         #get the noise predictions
         noise = self.net(net_in)

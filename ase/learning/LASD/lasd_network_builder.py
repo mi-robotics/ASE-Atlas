@@ -49,13 +49,8 @@ class LASDBuilder(ASEBuilder):
 
                 sigma_init = self.init_factory.create(**self.space_config['sigma_init'])
 
-                if (not self.space_config['learn_sigma']):
-                    self.sigma = nn.Parameter(torch.zeros(actions_num, requires_grad=False, dtype=torch.float32), requires_grad=False)
-                elif self.space_config['fixed_sigma']:
-                    self.sigma = nn.Parameter(torch.zeros(actions_num, requires_grad=True, dtype=torch.float32), requires_grad=True)
-                else:
-                    raise Exception('Method Not Implimented')
-                    self.sigma = torch.nn.Linear(actor_out_size, actions_num)
+                self.sigma = nn.Parameter(torch.zeros(actions_num, requires_grad=False, dtype=torch.float32), requires_grad=False)
+                
 
             mlp_init = self.init_factory.create(**self.initializer)
             if self.has_cnn:

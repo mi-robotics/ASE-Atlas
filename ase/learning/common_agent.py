@@ -545,7 +545,8 @@ class CommonAgent(a2c_continuous.A2CAgent):
         
         info = {
             'actor_loss': a_loss,
-            'actor_clipped': clipped.detach()
+            'actor_clipped': clipped.detach(),
+            'ratio':ratio
         }
         return info
 

@@ -108,6 +108,7 @@ class A1ASE(A1):
         self._amp_obs_demo_buf[:] = amp_obs_demo.view(self._amp_obs_demo_buf.shape)
         amp_obs_demo_flat = self._amp_obs_demo_buf.view(-1, self.get_num_amp_obs())
 
+
         return amp_obs_demo_flat
 
     def build_amp_obs_demo(self, motion_ids, motion_times0):

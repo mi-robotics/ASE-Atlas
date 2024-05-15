@@ -61,7 +61,10 @@ class AMPPlayerContinuous(common_player.CommonPlayer):
     def _post_step(self, info):
         super()._post_step(info)
         if (self.env.task.viewer):
-            self._amp_debug(info)
+            try:
+                self._amp_debug(info)
+            except:
+                pass
         return
 
     def _build_net_config(self):

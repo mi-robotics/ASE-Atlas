@@ -53,7 +53,7 @@ params:
   load_checkpoint: False
 
   config:
-    name: ALL_PRIORS
+    name: ASE_version_H
     env_name: rlgpu
     multi_gpu: False
     ppo: True
@@ -119,7 +119,7 @@ params:
     vel_estimator:
       name: vel_estimator
       lr: 1e-4
-      output_dim: 3
+      output_dim: 4
       units: [128, 64]
       grad_norm: 1.0
       trainWithVelocityEstimate: True

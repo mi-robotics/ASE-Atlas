@@ -171,9 +171,9 @@ class LSGM(torch.nn.Module):
 
         #the model predictions
         if self._use_target_model:
-            pred = self.score_target.forward(noised_latents, t)
+            pred = self.score_target.forward(noised_latents, t, ase_latents)
         else:
-            pred = self.score_model.forward(noised_latents, t)
+            pred = self.score_model.forward(noised_latents, t, ase_latents)
         # pred = self.score_model.forward(noised_latents, t)
 
         if self._used_mixed_predictions:
@@ -192,13 +192,13 @@ class LSGM(torch.nn.Module):
 
         kl = log_prob_q + cross_entropy_per_var
   
-        nelbo_loss = 0.7 * kl
+        nelbo_loss = 0.01*kl
         # regularizer = None 
         #TODO lets add regularization in the future
 
         l2_penalty = sum(p.pow(2.0).sum() for p in self.vae.parameters())
 
-        vae_loss = torch.mean(nelbo_loss) + 1*recon_loss # + 0.0001*l2_penalty
+        vae_loss = torch.mean(nelbo_loss) + 0.5*recon_loss  #+ 0.0001*l2_penalty
 
 
         info = {
@@ -209,7 +209,7 @@ class LSGM(torch.nn.Module):
         return vae_loss, recon_loss, info
     
     
-    def score_loss_algo2(self, latents):
+    def score_loss_algo2(self, latents, ase_latents):
 
         latents:torch.Tensor = latents.detach()
         latents.requires_grad = True
@@ -221,7 +221,7 @@ class LSGM(torch.nn.Module):
         noised_latents = self.sde.sample_q_t(latents, mean, std, noise_T )
 
         #the model predictions
-        pred = self.score_model.forward(noised_latents, t)
+        pred = self.score_model.forward(noised_latents, t, ase_latents)
         if self._used_mixed_predictions:
             pred = self.get_mixed_prediction(noised_latents, std, pred)
 
@@ -233,7 +233,7 @@ class LSGM(torch.nn.Module):
         l2_penalty = sum(p.pow(2.0).sum() for p in self.score_model.parameters())
         score_loss = torch.mean(score_objective) #+ 0.0001*l2_penalty
 
-        return score_loss*0.01 #+ 0.0001*l2_penalty
+        return score_loss*0.1 + 0.0001*l2_penalty
     
 
     def forward(self, obs, skill_latents):

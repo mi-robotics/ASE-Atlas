@@ -232,12 +232,12 @@ class SkeletonTree(Serializable):
                     for joint_name, link_name in child_link_joints:
                         if joint_name in merge_joints:
                             j = robot.joint_map[joint_name]
-                            print(joint_name, j.origin.position)
+                  
                             input()
                             continue
 
                         next_joint = robot.joint_map[joint_name]
-                        print(joint_name, next_joint.origin.position)
+                       
                         input()
                         next_link = robot.link_map[link_name]
                    
@@ -272,8 +272,7 @@ class SkeletonTree(Serializable):
             raise ValueError("MJCF parsed incorrectly please verify it.")
         # assume this is the root
         joints = xml_world_body.findall("joint")
-        print(joints)
-        input()
+    
         xml_body_root = xml_world_body.find("body")
         if xml_body_root is None:
             raise ValueError("MJCF parsed incorrectly please verify it.")
@@ -1338,8 +1337,7 @@ class SkeletonMotion(SkeletonState):
         # input()
         root_translation = transform_translation(local_transform)[..., root_trans_index, :]
         joint_parents = torch.from_numpy(np.array(joint_parents)).int()
-        print(root_translation.shape)
-        print(local_rotation[:,0])
+    
         if skeleton_tree is None:
             local_translation = transform_translation(local_transform).reshape(
                 -1, len(joint_parents), 3
@@ -1349,10 +1347,7 @@ class SkeletonMotion(SkeletonState):
         skeleton_state = SkeletonState.from_rotation_and_root_translation(
             skeleton_tree, r=local_rotation, t=root_translation, is_local=True
         )
-        print(len(skeleton_tree.node_names))
-        print(local_rotation.shape)
-        print(root_translation.shape)
-        input()
+  
         if not is_local:
             skeleton_state = skeleton_state.global_repr()
         

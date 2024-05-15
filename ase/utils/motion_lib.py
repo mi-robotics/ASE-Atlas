@@ -95,7 +95,8 @@ class MotionLib():
                  key_body_ids, device,
                  dof_frames=None,
                  revolute_y_only=False,
-                 use_classes=False
+                 use_classes=False,
+                 class_file='',
                  ):
         self._dof_body_ids = dof_body_ids
         self._dof_offsets = dof_offsets
@@ -105,13 +106,15 @@ class MotionLib():
         self._revolute_y_only = revolute_y_only
 
         self._use_classes = use_classes
-        self._classes_file = './ff'
+        self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels{"_"+class_file}.pkl'
+
         if self._use_classes:
-            df = pd.read_pickle(self._classes_file)
+            self.df = pd.read_pickle(self._classes_file)
+            self.df['File_Name'] = self.df['File_Name'].replace('./data', '', regex=False)
+            self.mb_predictions = []
+            self.mb_classes = []
             pass
 
-
-    
         self._device = device
         self._load_motions(motion_file)
 
@@ -143,11 +146,18 @@ class MotionLib():
 
     def sample_motions(self, n):
         motion_ids = torch.multinomial(self._motion_weights, num_samples=n, replacement=True)
-
+    
         # m = self.num_motions()
         # motion_ids = np.random.choice(m, size=n, replace=True, p=self._motion_weights)
         # motion_ids = torch.tensor(motion_ids, device=self._device, dtype=torch.long)
         return motion_ids
+    
+    def sample_skill_labels(self, n):
+        #TODO
+        inverse_props = 1-self._weight_groups
+        labels_ids = torch.multinomial(inverse_props, num_samples=n, replacement=True)
+
+        return self._unique_skill_labels[labels_ids] 
 
     def sample_time(self, motion_ids, truncate_time=None):
         n = len(motion_ids)
@@ -228,6 +238,8 @@ class MotionLib():
         self._motion_fps = []
         self._motion_dt = []
         self._motion_num_frames = []
+        self._motion_skill_labels = []
+        self._unique_skill_labels = []
         self._motion_files = []
 
         total_len = 0.0
@@ -235,8 +247,10 @@ class MotionLib():
         motion_files, motion_weights = self._fetch_motion_files(motion_file)
         num_motion_files = len(motion_files)
         for f in range(num_motion_files):
+
             curr_file = motion_files[f]
             print("Loading {:d}/{:d} motion files: {:s}".format(f + 1, num_motion_files, curr_file))
+
             curr_motion = SkeletonMotion.from_file(curr_file)
             # plot_skeleton_motion_interactive(curr_motion)
             motion_fps = curr_motion.fps
@@ -248,7 +262,7 @@ class MotionLib():
             self._motion_fps.append(motion_fps)
             self._motion_dt.append(curr_dt)
             self._motion_num_frames.append(num_frames)
- 
+
             curr_dof_vels = self._compute_motion_dof_vels(curr_motion)
             curr_motion.dof_vels = curr_dof_vels
 
@@ -268,8 +282,29 @@ class MotionLib():
             self._motion_weights.append(curr_weight)
             self._motion_files.append(curr_file)
 
-        self._motion_lengths = torch.tensor(self._motion_lengths, device=self._device, dtype=torch.float32)
+            if self._use_classes:
+                mf_ = curr_file.replace('./ase/data/motions/.', '')
+                filtered_df = self.df[self.df['File_Name'].str.contains(mf_, na=False)]
+                class_label = filtered_df['Class_Labels'].values[0]
+                self._motion_skill_labels.append(class_label)
+                self._unique_skill_labels.append(class_label)
 
+        if self._use_classes:
+            unique_list = []
+            for arr in self._unique_skill_labels:
+                if not any(np.array_equal(arr, unique_arr) for unique_arr in unique_list):
+                    unique_list.append(arr)
+            
+            self._unique_skill_labels = torch.tensor(unique_list, device=self._device, dtype=torch.float32)
+            self._weight_groups = torch.ones(self._unique_skill_labels.size(0),device=self._device, dtype=torch.float32)
+            self._weight_groups *= 1/self._unique_skill_labels.size(0)
+            self._motion_skill_labels = torch.tensor(self._motion_skill_labels, device=self._device, dtype=torch.float32)
+            self._update_mode_on = False
+            self._update_step_count = 0
+
+
+        self._motion_lengths = torch.tensor(self._motion_lengths, device=self._device, dtype=torch.float32)
+        #
         self._motion_weights = torch.tensor(self._motion_weights, dtype=torch.float32, device=self._device)
         self._motion_weights /= self._motion_weights.sum()
 
@@ -284,6 +319,69 @@ class MotionLib():
         print("Loaded {:d} motions with a total length of {:.3f}s.".format(num_motions, total_len))
 
         return
+    
+    def _store_mb_results(self, amp_classes, predictions):
+        self.mb_classes.append(amp_classes)
+        self.mb_predictions.append(predictions)
+        return
+    
+    def _update_motion_weights(self):
+        
+        amp_classes = torch.cat(self.mb_classes)
+        predictions = torch.cat(self.mb_predictions)
+        if self._update_step_count>1500:        
+        # if self._update_step_count>3:
+            self._update_mode_on = True
+
+        alpha = 0.2
+
+        sigma = {i: [] for i in range(len(self._unique_skill_labels))}
+
+        if self._update_mode_on:
+            #1)calc average score per groups
+
+            total_score = 0
+            for c in range(len(self._unique_skill_labels)):
+                target = self._unique_skill_labels[c]
+
+                matches = torch.all(amp_classes == target, dim=1)
+                matching_indices = torch.nonzero(matches, as_tuple=True)[0]
+
+                if len(matching_indices) == 0:
+                    mean_score = self._weight_groups[c]
+                else:
+                    mean_score = predictions[matching_indices].mean()
+
+                sigma[c] = mean_score
+                total_score += mean_score
+                
+            for c in range(len(self._unique_skill_labels)):
+                sigma[c] = 1-sigma[c]/total_score
+
+
+            #2) update the groups weightings
+            #TODO this can be vectorized
+            for c in range(len(self._unique_skill_labels)):
+                self._weight_groups[c] = (1-alpha)*self._weight_groups[c] + alpha*sigma[c]
+
+            #normalize for prob dist
+            self._weight_groups /= self._weight_groups.sum()
+
+            #3) Apply new weight groups
+            for c in range(len(self._unique_skill_labels)):
+                target = self._unique_skill_labels[c]
+                matches = torch.all(self._motion_skill_labels == target, dim=1)
+                matching_indices = torch.nonzero(matches, as_tuple=True)[0]
+       
+                self._motion_weights[matching_indices] = self._weight_groups[c]/matching_indices.size(0)
+
+        self._update_step_count += 1
+        self.mb_classes = []
+        self.mb_predictions = []
+        return 
+
+    
+
 
     def _fetch_motion_files(self, motion_file):
         ext = os.path.splitext(motion_file)[1]
