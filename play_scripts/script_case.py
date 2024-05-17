@@ -9,8 +9,8 @@ command = 'cd .. && python ./ase/run.py \
     --num_envs 1 \
     --cfg_env ./ase/data/cfg/experiments/CASE/env.yaml \
     --cfg_train ./ase/data/cfg/experiments/CASE/train.yaml \
-    --motion_file ./ase/data/motions/all_inv.yaml\
-    --checkpoint ./output/CASE_version_H_27-09-08-45/nn/CASE_version_H.pth'
+    --motion_file ./ase/data/motions/all_small_play.yaml\
+    --checkpoint ./output/CASE_SMALLER_SKILLS_14-09-46-54/nn/CASE_SMALLER_SKILLS.pth'
 
 # command = 'cd .. && python ./ase/run.py \
 #     --test --task A1ASE \

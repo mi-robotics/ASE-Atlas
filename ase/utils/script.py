@@ -6,7 +6,7 @@ df = pd.read_pickle(CLS_PATH)
 df['File_Name'] = df['File_Name'].replace('./data', '', regex=False)
 class_labels = df['Class_Labels'].values
 
-CLS_PATH = '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels.pkl'
+CLS_PATH = '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels_50_seq_len.pkl'
 df = pd.read_pickle(CLS_PATH)
 df['File_Name'] = df['File_Name'].replace('./data', '', regex=False)
 class_labels = df['Class_Labels'].values
@@ -22,6 +22,6 @@ unique_arrays = [np.array(t) for t in unique_tuples]
 final_array = np.vstack(unique_arrays)
 
 # Save the array to a binary file (.npy)
-np.save('./unique_classes.npy', final_array)
+np.save('./unique_classes_50_seq_len.npy', final_array)
 
 print(final_array)

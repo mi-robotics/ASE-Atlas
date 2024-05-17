@@ -30,6 +30,8 @@ import numpy as np
 import os
 import yaml
 import pandas as pd
+import json
+
 
 from poselib.poselib.skeleton.skeleton3d import SkeletonMotion
 from poselib.poselib.core.rotation3d import *
@@ -97,16 +99,23 @@ class MotionLib():
                  revolute_y_only=False,
                  use_classes=False,
                  class_file='',
+                 warmup_steps=1500,
+                 is_continual=False
                  ):
+        
         self._dof_body_ids = dof_body_ids
         self._dof_offsets = dof_offsets
         self._num_dof = dof_offsets[-1]
         self._key_body_ids = torch.tensor(key_body_ids, device=device)
         self._dof_frames = dof_frames
         self._revolute_y_only = revolute_y_only
+        self._warmup_steps = warmup_steps
+        self._is_continual = is_continual
 
         self._use_classes = use_classes
-        self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels{"_"+class_file}.pkl'
+        # self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels{"_"+class_file}.pkl'        
+        self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels.pkl'
+
 
         if self._use_classes:
             self.df = pd.read_pickle(self._classes_file)
@@ -154,7 +163,7 @@ class MotionLib():
     
     def sample_skill_labels(self, n):
         #TODO
-        inverse_props = 1-self._weight_groups
+        inverse_props = self._weight_groups
         labels_ids = torch.multinomial(inverse_props, num_samples=n, replacement=True)
 
         return self._unique_skill_labels[labels_ids] 
@@ -284,6 +293,7 @@ class MotionLib():
 
             if self._use_classes:
                 mf_ = curr_file.replace('./ase/data/motions/.', '')
+         
                 filtered_df = self.df[self.df['File_Name'].str.contains(mf_, na=False)]
                 class_label = filtered_df['Class_Labels'].values[0]
                 self._motion_skill_labels.append(class_label)
@@ -329,13 +339,15 @@ class MotionLib():
         
         amp_classes = torch.cat(self.mb_classes)
         predictions = torch.cat(self.mb_predictions)
-        if self._update_step_count>1500:        
+
+        if self._update_step_count>self._warmup_steps:        
         # if self._update_step_count>3:
             self._update_mode_on = True
 
         alpha = 0.2
 
         sigma = {i: [] for i in range(len(self._unique_skill_labels))}
+        mean_probs = {i: [] for i in range(len(self._unique_skill_labels))}
 
         if self._update_mode_on:
             #1)calc average score per groups
@@ -353,6 +365,7 @@ class MotionLib():
                     mean_score = predictions[matching_indices].mean()
 
                 sigma[c] = mean_score
+                mean_probs[c] = mean_score
                 total_score += mean_score
                 
             for c in range(len(self._unique_skill_labels)):
@@ -378,10 +391,26 @@ class MotionLib():
         self._update_step_count += 1
         self.mb_classes = []
         self.mb_predictions = []
+
+        if self._is_continual:
+            self._log_weights(self._weight_groups, mean_probs)
         return 
 
     
+    def _log_weights(self, weights, probs):
 
+        with open('./continual_logs.jsonl', 'a') as file:  # Use a JSON lines format
+            for c in range(len(self._unique_skill_labels)):
+        
+                entry = json.dumps({
+                    "iteration": self._update_step_count,
+                    "class": self._unique_skill_labels[c],
+                    "weights": weights[c],
+                    "probs": probs[c]
+                })
+                file.write(entry + "\n")
+
+        return
 
     def _fetch_motion_files(self, motion_file):
         ext = os.path.splitext(motion_file)[1]

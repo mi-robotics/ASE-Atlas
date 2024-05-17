@@ -48,9 +48,9 @@ pi(a|s,c,z)
 '''
 
 
-CLS_PATH = '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/unique_classes.npy'
-CLS = 14
-COLLECT_DATA = True
+CLS_PATH = '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/unique_classes_50_seq_len.npy'
+CLS = 8
+COLLECT_DATA = False
 
 class DataItem:
     def __init__(self):
@@ -109,6 +109,7 @@ class CASEPlayerContinuous(ase_player.ASEPlayer):
         self.classes = np.load(CLS_PATH)
         self.cls = self.classes[CLS]
         self.cls_index = 0
+        self._use_rand_skills = False
 
         self.data_collector = DataCollection()
 
@@ -165,7 +166,7 @@ class CASEPlayerContinuous(ase_player.ASEPlayer):
         # print(current_action)
         # input()
 
-        self.save_policy()
+        # self.save_policy()
 
         self.data_item = DataItem()
         self.data_item.obs = obs[0].detach().cpu()
@@ -267,7 +268,12 @@ class CASEPlayerContinuous(ase_player.ASEPlayer):
 
     def _reset_skill(self):
 
-        self.cls_index = torch.randint(low=0, high=30, size=(1,)).item()
-        self.cls = self.classes[self.cls_index]
+        if self._use_rand_skills:
+            quit()
+            self.cls_index = torch.randint(low=0, high=30, size=(1,)).item()
+
+            self.cls = self.classes[self.cls_index]
+
+  
 
         return 
