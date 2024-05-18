@@ -13,7 +13,7 @@ command = 'cd .. && python ase/run.py \
     --task A1CASE \
     --cfg_env ./ase/data/cfg/experiments/CASE/env.yaml \
     --cfg_train ./ase/data/cfg/experiments/CASE/train.yaml \
-    --motion_file ./ase/data/motions/all_inv.yaml\
+    --motion_file ./ase/data/motions/all_small.yaml\
    --headless'
 
 

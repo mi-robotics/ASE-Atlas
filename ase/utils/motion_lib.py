@@ -113,8 +113,8 @@ class MotionLib():
         self._is_continual = is_continual
 
         self._use_classes = use_classes
-        # self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels{"_"+class_file}.pkl'        
-        self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels.pkl'
+        self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels{class_file}.pkl'        
+        # self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels.pkl'
 
 
         if self._use_classes:
@@ -369,7 +369,7 @@ class MotionLib():
                 total_score += mean_score
                 
             for c in range(len(self._unique_skill_labels)):
-                sigma[c] = 1-sigma[c]/total_score
+                sigma[c] = sigma[c]/total_score
 
 
             #2) update the groups weightings
