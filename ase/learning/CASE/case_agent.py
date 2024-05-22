@@ -764,19 +764,19 @@ class CASEAgent(amp_agent.AMPAgent):
         return
 
     def _amp_debug(self, info, ase_latents):
-        with torch.no_grad():
-            amp_obs = info['amp_obs']
-            amp_obs = amp_obs
-            ase_latents = ase_latents
-            disc_pred = self._eval_disc(amp_obs)
-            amp_rewards = self._calc_amp_rewards(amp_obs, ase_latents)
-            disc_reward = amp_rewards['disc_rewards']
-            enc_reward = amp_rewards['enc_rewards']
+        # with torch.no_grad():
+        #     amp_obs = info['amp_obs']
+        #     amp_obs = amp_obs
+        #     ase_latents = ase_latents
+        #     disc_pred = self._eval_disc(amp_obs)
+        #     amp_rewards = self._calc_amp_rewards(amp_obs, ase_latents)
+        #     disc_reward = amp_rewards['disc_rewards']
+        #     enc_reward = amp_rewards['enc_rewards']
 
-            disc_pred = disc_pred.detach().cpu().numpy()[0, 0]
-            disc_reward = disc_reward.cpu().numpy()[0, 0]
-            enc_reward = enc_reward.cpu().numpy()[0, 0]
-            print("disc_pred: ", disc_pred, disc_reward, enc_reward)
+        #     disc_pred = disc_pred.detach().cpu().numpy()[0, 0]
+        #     disc_reward = disc_reward.cpu().numpy()[0, 0]
+        #     enc_reward = enc_reward.cpu().numpy()[0, 0]
+        #     print("disc_pred: ", disc_pred, disc_reward, enc_reward)
         return
     
 

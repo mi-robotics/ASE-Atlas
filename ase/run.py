@@ -235,7 +235,6 @@ def build_alg_runner(algo_observer):
     runner.model_builder.network_factory.register_builder('case', lambda **kwargs : case_network_builder.CASEBuilder())
     
 
-
     runner.algo_factory.register_builder('hrl', lambda **kwargs : hrl_agent.HRLAgent(**kwargs))
     runner.player_factory.register_builder('hrl', lambda **kwargs : hrl_players.HRLPlayer(**kwargs))
     runner.model_builder.model_factory.register_builder('hrl', lambda network, **kwargs : hrl_models.ModelHRLContinuous(network))  

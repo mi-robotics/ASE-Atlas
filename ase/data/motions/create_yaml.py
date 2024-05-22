@@ -108,9 +108,19 @@ def create_yaml_from_directories(directory_paths, output_file, exclusion_file_pa
 
 # Usage example
 exclusion_file_path = './bad_motions.txt'  # This should be the path to your file containing the filepaths to exclude
-directory_paths = ['./train_data_seq_50']  # Replace with your directory paths
-# directory_paths = ['./a1_v3_processed']  # Replace with your directory paths
+# directory_paths = ['./train_data_seq_50']  # Replace with your directory paths
+directory_paths = [
+    './a1_v3_processed',
+    './a1_recording_processed',
+    './dog_mocap_processed',
+    './continual/back',   
+    './continual/left',
+    './continual/right',
+    './continual/stand',
+    './continual/backflip',    
+    './continual/frontflip',
+    ]  # Replace with your directory paths
 
-output_file = './all_small.yaml'  # Replace with your desired output file name
+output_file = './all_motions_final.yaml'  # Replace with your desired output file name
 create_yaml_from_directories(directory_paths, output_file, exclusion_file_path)
 

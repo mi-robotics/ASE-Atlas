@@ -2,15 +2,15 @@ import subprocess
 
 
 command = 'cd .. && python ./ase/run.py \
-    --test --task A1CASE \
+    --test --task A1CASEGetUp \
     --noise_level 1.0 \
     --friction_overide 1 \
     --use_delay 0 \
     --num_envs 1 \
     --cfg_env ./ase/data/cfg/experiments/CASE/env.yaml \
     --cfg_train ./ase/data/cfg/experiments/CASE/train.yaml \
-    --motion_file ./ase/data/motions/all_inv.yaml\
-    --checkpoint ./output/CASE_FOCAL_FINAL_18-12-09-19/nn/CASE_FOCAL_FINAL.pth'
+    --motion_file ./ase/data/motions/all_motions_final.yaml\
+    --checkpoint ./output/CASE_FOCAL_FINAL_GET_UP_20-17-10-59/nn/CASE_FOCAL_FINAL_GET_UP.pth'
 
 # command = 'cd .. && python ./ase/run.py \
 #     --test --task A1ASE \

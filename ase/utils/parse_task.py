@@ -39,6 +39,7 @@ from env.tasks.humanoid_view_motion import HumanoidViewMotion
 from env.tasks.a1.a1 import A1
 from env.tasks.a1.a1_ase import A1ASE
 from env.tasks.a1.a1_case import A1CASE
+from env.tasks.a1.a1_case_getup import A1CASEGetUp
 
 from env.tasks.a1.go2_transfer import Go2Transfer
 from env.tasks.a1.a1_view_motion import A1ViewMotion

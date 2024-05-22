@@ -44,9 +44,9 @@ class A1CASE(A1ASE):
         self._reset_default_env_ids = []
         self._reset_ref_env_ids = []
 
+        self._reset_skill_labels(env_ids)
         super()._reset_envs(env_ids)
         #TODO -> reset env skill label
-        self._reset_skill_labels(env_ids)
         self._init_amp_obs(env_ids)
 
         return
@@ -64,6 +64,7 @@ class A1CASE(A1ASE):
 
         self._skill_conditions[env_ids] = new_skill.clone()
         return 
+    
     
     def fetch_amp_obs_demo(self, num_samples):
 

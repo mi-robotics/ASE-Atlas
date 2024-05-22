@@ -99,7 +99,7 @@ class MotionLib():
                  revolute_y_only=False,
                  use_classes=False,
                  class_file='',
-                 warmup_steps=1500,
+                 warmup_steps=5000,
                  is_continual=False
                  ):
         
@@ -113,7 +113,7 @@ class MotionLib():
         self._is_continual = is_continual
 
         self._use_classes = use_classes
-        self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels{class_file}.pkl'        
+        self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels_all_motions.pkl'        
         # self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels.pkl'
 
 
@@ -122,6 +122,8 @@ class MotionLib():
             self.df['File_Name'] = self.df['File_Name'].replace('./data', '', regex=False)
             self.mb_predictions = []
             self.mb_classes = []
+            self.recovery_motion_ids = []
+            self.recovery_skill_label = None
             pass
 
         self._device = device
@@ -153,8 +155,14 @@ class MotionLib():
     def get_motion(self, motion_id):
         return self._motions[motion_id]
 
-    def sample_motions(self, n):
-        motion_ids = torch.multinomial(self._motion_weights, num_samples=n, replacement=True)
+    def sample_motions(self, n, exclude_index = None):
+
+        if exclude_index is not None:
+            temp_weights = self._motion_weights.clone()
+            temp_weights[exclude_index] = 0.
+            motion_ids = torch.multinomial(temp_weights, num_samples=n, replacement=True)
+        else:
+            motion_ids = torch.multinomial(self._motion_weights, num_samples=n, replacement=True)
     
         # m = self.num_motions()
         # motion_ids = np.random.choice(m, size=n, replace=True, p=self._motion_weights)
@@ -299,6 +307,10 @@ class MotionLib():
                 self._motion_skill_labels.append(class_label)
                 self._unique_skill_labels.append(class_label)
 
+                if 'stand' in mf_:
+                    self.recovery_motion_ids.append(len(self._motion_skill_labels)-1)
+                    self.recovery_skill_label = class_label
+
         if self._use_classes:
             unique_list = []
             for arr in self._unique_skill_labels:
@@ -369,11 +381,11 @@ class MotionLib():
                 total_score += mean_score
                 
             for c in range(len(self._unique_skill_labels)):
-                sigma[c] = sigma[c]/total_score
+                sigma[c] = 1-sigma[c]/total_score
 
 
             #2) update the groups weightings
-            #TODO this can be vectorized
+            #TODO this can be vectorized the boysssssssss
             for c in range(len(self._unique_skill_labels)):
                 self._weight_groups[c] = (1-alpha)*self._weight_groups[c] + alpha*sigma[c]
 
