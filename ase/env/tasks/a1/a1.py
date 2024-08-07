@@ -556,7 +556,7 @@ class A1(BaseTask):
         self._pd_action_offset = 0.5 * (lim_high + lim_low)
         # max direction either side of the limits from the mid
         self._pd_action_scale = 0.5 * (lim_high - lim_low)
- 
+     
         self._pd_action_offset = to_torch(self._pd_action_offset, device=self.device)
         self._pd_action_scale = to_torch(self._pd_action_scale, device=self.device)
 

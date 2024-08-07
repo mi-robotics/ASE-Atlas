@@ -72,7 +72,6 @@ class HumanoidAMP(Humanoid):
         self._hist_amp_obs_buf = self._amp_obs_buf[:, 1:]
         
         self._amp_obs_demo_buf = None
-
         return
 
     def post_physics_step(self):
@@ -159,6 +158,7 @@ class HumanoidAMP(Humanoid):
     def _load_motion(self, motion_file):
      
         assert(self._dof_offsets[-1] == self.num_dof)
+       
         self._motion_lib = MotionLib(motion_file=motion_file,
                                      dof_body_ids=self._dof_body_ids,
                                      dof_offsets=self._dof_offsets,
@@ -294,6 +294,7 @@ class HumanoidAMP(Humanoid):
     
     def _compute_amp_observations(self, env_ids=None):
         key_body_pos = self._rigid_body_pos[:, self._key_body_ids, :]
+
         if (env_ids is None):
             self._curr_amp_obs_buf[:] = build_amp_observations(self._rigid_body_pos[:, 0, :],
                                                                self._rigid_body_rot[:, 0, :],

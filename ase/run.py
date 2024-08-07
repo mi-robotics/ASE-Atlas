@@ -71,7 +71,10 @@ from learning.CASE import case_player
 from learning.CASE import case_model
 from learning.CASE import case_network_builder
 
-
+from learning.EMIL import emil_agent
+from learning.EMIL import emil_models
+from learning.EMIL import emil_player
+from learning.EMIL import emil_network_builder
 
 
 from learning import hrl_agent
@@ -233,6 +236,11 @@ def build_alg_runner(algo_observer):
     runner.player_factory.register_builder('case', lambda **kwargs : case_player.CASEPlayerContinuous(**kwargs))
     runner.model_builder.model_factory.register_builder('case', lambda network, **kwargs : case_model.ModelCASEContinuous(network))  
     runner.model_builder.network_factory.register_builder('case', lambda **kwargs : case_network_builder.CASEBuilder())
+
+    runner.algo_factory.register_builder('emil', lambda **kwargs : emil_agent.EMILAgent(**kwargs))
+    runner.player_factory.register_builder('emil', lambda **kwargs : emil_player.EMILPlayerContinuous(**kwargs))
+    runner.model_builder.model_factory.register_builder('emil', lambda network, **kwargs : emil_models.ModelEMILContinuous(network))  
+    runner.model_builder.network_factory.register_builder('emil', lambda **kwargs : emil_network_builder.EMILBuilder())
     
 
     runner.algo_factory.register_builder('hrl', lambda **kwargs : hrl_agent.HRLAgent(**kwargs))

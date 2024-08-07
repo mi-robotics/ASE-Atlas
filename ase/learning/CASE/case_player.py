@@ -9,7 +9,7 @@ from rl_games.algos_torch import torch_ext
 from rl_games.algos_torch.running_mean_std import RunningMeanStd
 from rl_games.algos_torch import players
 import learning.ase_players as ase_player
-
+import time
 '''
 c -> (64, )
 z -> (8,)
@@ -48,9 +48,13 @@ pi(a|s,c,z)
 '''
 
 
-CLS_PATH = '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/unique_classes_all_motions.npy'#_50_seq_len
-CLS = 4
+CLS_PATH = '/home/mcarroll/Documents/cdt-1/completed/ASE-Atlas/ase/utils/unique_classes_50b0.1.npy'#_50_seq_len
+# CLS_PATH = '/home/mcarroll/Documents/cdt-1/completed/ASE-Atlas/ase/utils/unique_classes.npy'#_50_seq_len
+
+CLS = 30
 COLLECT_DATA = False
+
+SAVE_DIR = '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/CASE/data/max_ds'
 
 class DataItem:
     def __init__(self):
@@ -66,42 +70,42 @@ class DataCollection:
         self.ase_latents = []
         self.skill_index = []
 
+        self.target_epsides = 5000
         self.num_transitions = 0
+        self.num_episode = 0
         return 
     
     def add_step(self, data:DataItem):
-        self.obs.append(data.obs)
-        self.next_obs.append(data.next_obs)
-        self.ase_latents.append(data.ase_latents)
-        self.skill_index.append(data.skill_index)
-
-        self.num_transitions += 1
-
-        if self.num_transitions > 1e5:
-            self.save_and_quit()
-
-        if self.num_transitions % 1000:
-            print(self.num_transitions, '--------------------------------------------------------------------------')
-
-    def save_and_quit(self):
-        obs = torch.stack(self.obs)
-        next_obs = torch.stack(self.next_obs)
-        ase_latents = torch.stack(self.ase_latents)
-        skill_index = torch.stack(self.skill_index)
-
-        print(obs.size())        
-        print(next_obs.size())
-        print(ase_latents.size())
-        print(skill_index.size())
+        self.obs.append(data.obs.clone())
+        self.next_obs.append(data.next_obs.clone())
+        self.ase_latents.append(data.ase_latents.clone())
+        self.skill_index.append(data.skill_index.clone())
 
 
-        torch.save(obs, '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/CASE/obs.pt')
-        torch.save(next_obs, '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/CASE/next-obs.pt')
-        torch.save(ase_latents, '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/CASE/ase_latents.pt')
-        torch.save(skill_index, '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/CASE/skill_index.pt')
+    def save_seq(self):
+        # t = time.time()
+        # obs = torch.stack(self.obs)
+        # skill_index = torch.stack(self.skill_index)
 
-        quit()
+        # torch.save(obs, f'{SAVE_DIR}/obs_{t}.pt')
+        # torch.save(skill_index, f'{SAVE_DIR}/skill_label_{t}.pt')
+
+        # self.obs = []
+        # self.next_obs = []
+        # self.ase_latents = []
+        # self.skill_index = []
+
+        # print('SAVED EPISODE ------------------------- ', self.num_episode)
+        # self.num_episode += 1
+        # if self.num_episode > self.target_epsides:
+        #     self.quit()
+
         return 
+
+    def quit(self):
+        print('QUITING ------------------------- 5k EPISODES COLLECTED')
+        quit()
+         
 
 class CASEPlayerContinuous(ase_player.ASEPlayer):
     def __init__(self, config):
@@ -121,7 +125,6 @@ class CASEPlayerContinuous(ase_player.ASEPlayer):
     def get_action(self, obs_dict, is_determenistic=False):
         self._update_latents()
         
-
         # print(self._ase_latents)
         obs = obs_dict['obs']
         if len(obs.size()) == len(self.obs_shape):
@@ -132,14 +135,9 @@ class CASEPlayerContinuous(ase_player.ASEPlayer):
         obs = self._obs_buffer[:, self._obs_delay]
 
         # current_action = self.base_policy(obs, self._ase_latents)
+        obs_raw = obs.clone()
         obs = self._preproc_obs(obs)
         ase_latents = self._ase_latents
-
-
-        # print(ase_latents.shape)
-        # print(obs.shape)
-        # print(torch.tensor(self.cls, device=self.device).unsqueeze(0).shape)
-        # input()
 
         input_dict = {
             'is_train': False,
@@ -163,21 +161,19 @@ class CASEPlayerContinuous(ase_player.ASEPlayer):
 
         current_action = current_action.detach()
 
-        # print(current_action)
-        # input()
-
         # self.save_policy()
 
         self.data_item = DataItem()
-        self.data_item.obs = obs[0].detach().cpu()
+        self.data_item.obs = obs_raw[0].detach().cpu()
         self.data_item.ase_latents = ase_latents[0].detach().cpu()
-        self.data_item.skill_index = torch.tensor([self.cls_index])
+        self.data_item.skill_index = torch.tensor(self.cls).cpu()
     
         return  players.rescale_actions(self.actions_low, self.actions_high, torch.clamp(current_action, -1.0, 1.0))
         
 
     def _post_step(self, info, obs):
-        self.data_item.next_obs = self._preproc_obs(obs)[0].detach().cpu()
+        #TODO double check this is not preprocessed
+        self.data_item.next_obs = obs[0].detach().cpu()
         self.data_collector.add_step(self.data_item)
         self.data_item = None
         return
@@ -261,6 +257,7 @@ class CASEPlayerContinuous(ase_player.ASEPlayer):
     def _update_latents(self):
         if (self._latent_step_count <= 0):
             self._reset_skill()
+            self.data_collector.save_seq()
 
         super()._update_latents()
         return
@@ -269,11 +266,7 @@ class CASEPlayerContinuous(ase_player.ASEPlayer):
     def _reset_skill(self):
 
         if self._use_rand_skills:
-       
             self.cls_index = torch.randint(low=0, high=29, size=(1,)).item()
-
             self.cls = self.classes[self.cls_index]
-
-  
 
         return 

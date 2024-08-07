@@ -53,7 +53,7 @@ params:
   load_checkpoint: False
 
   config:
-    name: CASE_FOCAL_FINAL_GET_UP
+    name: CASE_FOCAL_FINAL_ALL_SKILLS_2
     env_name: rlgpu
     multi_gpu: False
     ppo: True

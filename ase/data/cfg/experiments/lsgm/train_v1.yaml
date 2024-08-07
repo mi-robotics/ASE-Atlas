@@ -85,7 +85,7 @@ params:
   load_checkpoint: False
 
   config:
-    name: LSGM_V2
+    name: LSGM_V3
     env_name: rlgpu
     multi_gpu: False
     ppo: True
@@ -97,7 +97,7 @@ params:
     normalize_advantage: True
     gamma: 0.99
     tau: 0.95
-    learning_rate: 1e-5
+    learning_rate: 2e-5
     lr_schedule: adaptive
     kl_threshold: -0.01
     score_to_win: 20000
@@ -107,7 +107,7 @@ params:
     print_stats: True
     grad_norm: 1.0
     entropy_coef: 0.0
-    truncate_grads: False
+    truncate_grads: True
     ppo: True
     e_clip: 0.2
     horizon_length: 32
@@ -136,7 +136,7 @@ params:
     
     amp_latent_grad_bonus: 0.00
     amp_latent_grad_bonus_max: 100.0
-    amp_diversity_bonus: 0.1
+    amp_diversity_bonus: 0.01
     amp_diversity_tar: 1.0
     
     enc_coef: 5

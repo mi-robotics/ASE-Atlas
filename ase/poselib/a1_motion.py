@@ -31,22 +31,48 @@ for f_name in a1_files:
     if os.path.isfile(f_path):
         try:
             data = np.load(f_path)
-            pos = torch.Tensor(data['pos'])
-            rot = torch.Tensor(data['rot'])
-            
-            if len(pos) > 50:
+            pos = torch.Tensor(data['pos']).unsqueeze(0).repeat(2,1,1)
+            rot = torch.Tensor(data['rot']).unsqueeze(0).repeat(2,1,1,1)
+     
+            if len(pos) > 1:
 
-                a1_skeleton = SkeletonState.from_file('/home/milo/Documents/cdt-1/examples/ASE-Atlas/ase/poselib/data/a1_tpose_v2.npy').skeleton_tree
-
+                a1_skeleton = SkeletonState.from_file('/home/mcarroll/Documents/cdt-1/completed/ASE-Atlas/ase/poselib/data/a1_tpose_v2.npy').skeleton_tree
+                print('create a1 state')
                 a1_state = SkeletonState.from_rotation_and_root_translation(
                             a1_skeleton, r=rot, t=pos, is_local=True
                         )
+                print('created a1 state')
                 motion = SkeletonMotion.from_skeleton_state(a1_state, fps=50)
+                print('created a1 motion')
                 # plot_skeleton_motion_interactive(motion)
+             
+                root_vel = motion.global_root_velocity
+                root_ang_vel = motion.global_root_angular_velocity
 
-                motion.to_file(f'data/a1_v3_processed/{name}.npy')
-        except:
-            print('error')
+                p = a1_state.global_translation 
+                r = a1_state.global_rotation
+                time_delta=1 / 50
+
+                print('motion vars accessible')
+    
+
+                tensor_root_vel = motion._compute_torch_velocity(p, time_delta)
+                tensor_root_ang_vel = motion._compute_torch_angular_velocity(r, time_delta)
+                print(a1_state.local_rotation.size())
+                print(a1_state.local_rotation[..., :, 1:, :].size())
+                input()
+                tensor_dof_vel = motion._compute_torch_dof_velocity(pos=a1_state.local_rotation[..., :, 1:, :], time_delta=time_delta)
+
+                print('GOT DOF VEL')
+                print(tensor_dof_vel.size())
+                input()
+                # dof_vel = motion.dof_vels 
+                print(torch.nn.functional.mse_loss(tensor_root_vel[:,:,0,:], root_vel))                
+                print(torch.nn.functional.mse_loss(tensor_root_ang_vel[:,:,0,:], root_ang_vel))
+
+                # motion.to_file(f'data/a1_v3_processed/{name}.npy')
+        except Exception as e:
+            print('error--------', e)
             print(len(pos))
 
             input()

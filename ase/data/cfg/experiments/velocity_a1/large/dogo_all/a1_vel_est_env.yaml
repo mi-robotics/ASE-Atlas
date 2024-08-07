@@ -2,11 +2,11 @@
 env: 
   numEnvs: 1024
   envSpacing: 5
-  episodeLength: 300
+  episodeLength: 600
   isFlagrun: False
   enableDebugVis: False
   
-  useVelocityObs: True
+  useVelocityObs: False
   useNoiseyMeasurements: True
   noiseLevel: 1.0
   obsMethod: standard # max, standard

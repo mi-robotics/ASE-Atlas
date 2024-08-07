@@ -57,12 +57,13 @@ class A1CASE(A1ASE):
         return self._skill_conditions[env_ids]
     
     def _reset_skill_labels(self, env_ids):
-        if self._is_continual:
-            new_skill = self._motion_lib.sample_skill_labels(len(env_ids))
-        else:
-            new_skill = self._unique_skill_labels[torch.randint(0, len(self._unique_skill_labels), (len(env_ids),), device=self.device)]
+        if len(env_ids)>0:
+            if self._is_continual or True:
+                new_skill = self._motion_lib.sample_skill_labels(len(env_ids))
+            else:
+                new_skill = self._unique_skill_labels[torch.randint(0, len(self._unique_skill_labels), (len(env_ids),), device=self.device)]
 
-        self._skill_conditions[env_ids] = new_skill.clone()
+            self._skill_conditions[env_ids] = new_skill.clone()
         return 
     
     

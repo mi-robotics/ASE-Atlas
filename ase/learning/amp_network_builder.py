@@ -54,6 +54,7 @@ class AMPBuilder(network_builder.A2CBuilder):
                     
             amp_input_shape = kwargs.get('amp_input_shape')
             self._build_disc(amp_input_shape)
+           
 
             return
 
@@ -148,6 +149,8 @@ class AMPBuilder(network_builder.A2CBuilder):
             torch.nn.init.zeros_(self._disc_logits.bias) 
 
             return
+        
+        
 
     def build(self, name, **kwargs):
         net = AMPBuilder.Network(self.params, **kwargs)

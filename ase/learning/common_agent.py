@@ -168,10 +168,11 @@ class CommonAgent(a2c_continuous.A2CAgent):
                         self.self_play_manager.update(self)
 
                 if self.save_freq > 0:
+                    # if (epoch_num % 25 == 0):
                     if (epoch_num % self.save_freq == 0):
                         self.save(model_output_file)
 
-                        if (self._save_intermediate and epoch_num % 1000 == 0):
+                        if (self._save_intermediate and epoch_num % 25 == 0):
 
                             int_model_output_file = model_output_file + '_' + str(epoch_num).zfill(8)
                             self.save(int_model_output_file)

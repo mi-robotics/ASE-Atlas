@@ -233,12 +233,12 @@ class SkeletonTree(Serializable):
                         if joint_name in merge_joints:
                             j = robot.joint_map[joint_name]
                   
-                            input()
+                           
                             continue
 
                         next_joint = robot.joint_map[joint_name]
                        
-                        input()
+                     
                         next_link = robot.link_map[link_name]
                    
                         node_index = _add_joint(None, next_joint, current_index, node_index)
@@ -719,12 +719,15 @@ class SkeletonState(Serializable):
 
     @staticmethod
     def _to_state_vector(rot, rt):
+        print('in to state vec')
         state_shape = rot.shape[:-2]
         vr = rot.reshape(*(state_shape + (-1,)))
         vt = rt.broadcast_to(*state_shape + rt.shape[-1:]).reshape(
             *(state_shape + (-1,))
         )
         v = torch.cat([vr, vt], axis=-1)
+        print('do we get here')
+  
         return v
 
     @classmethod
@@ -1370,11 +1373,57 @@ class SkeletonMotion(SkeletonState):
             / time_delta,
         )
         return velocity
+    
+
+    def _compute_torch_velocity(self, p, time_delta):
+        #[seq_len, joint, posiiton]
+        grad_p = torch.gradient(p, dim=-3)[0]
+        velocity = self._torch_gaussian_kernel(grad_p, time_delta)
+        return velocity 
+    
+
+    def _torch_gaussian_kernel(self, x, time_delta):
+        # x -> [bs, seq_len, n_joints, features]
+        size = x.size()
+
+        # Define the Gaussian kernel parameters
+        sigma = 2.0  # Standard deviation
+        kernel_size = int(6 * sigma + 1) # 6 sigma rule for the kernel size
+        
+        # Create a Gaussian kernel
+        kernel = torch.arange(kernel_size, dtype=torch.float32) - (kernel_size - 1) / 2
+        kernel = torch.exp(-0.5 * (kernel / sigma) ** 2)
+        kernel = kernel / kernel.sum()  # Normalize the kernel
+        
+        # Reshape the kernel for conv1d --> (out channels, inchannels, kernel size)
+        kernel = kernel.view(1, 1, -1).expand(size[-1]*size[-2], 1, -1)  # assuming p.size(2) is the number of positions
+
+        # Reshape grad_p to match the expected shape for conv1d considers joints as the batch
+        x = x.permute(0, -2, -1, 1).contiguous() #[bs, n_j, features, seq_len]              
+        x = x.reshape(x.size(0), -1, x.size(-1)) #[bs, n_j*features, seq_len]
+
+        # Apply convolution with the Gaussian kernel
+        padding = kernel_size // 2
+        x = torch.nn.functional.pad(x, (padding, padding), mode='replicate')
+     
+        #inputs size minibatch, inchannel 
+        x = torch.nn.functional.conv1d(x, kernel,  groups=size[-1]*size[-2]) #[bs, n_j*features, seq_len]
+
+        # Reshape back to the original structure
+        x = x.transpose(-1, -2).reshape(size) #[bs, seq, n_joins, featues]
+
+        x_smooth = x / time_delta
+        return x_smooth 
+    
+    
+
+
 
     @staticmethod
     def _compute_angular_velocity(r, time_delta: float, guassian_filter=True):
         # assume the second last dimension is the time axis
         diff_quat_data = quat_identity_like(r)
+  
         diff_quat_data[..., :-1, :, :] = quat_mul_norm(
             r[..., 1:, :, :], quat_inverse(r[..., :-1, :, :])
         )
@@ -1386,6 +1435,28 @@ class SkeletonMotion(SkeletonState):
             ),
         )
         return angular_velocity
+    
+    def _compute_torch_angular_velocity(self, r, time_delta):
+        # [seq len, joints, global quat r]
+        diff_quat_data = quat_identity_like(r)
+        diff_quat_data[..., :-1, :, :] = quat_mul_norm(
+            r[..., 1:, :, :], quat_inverse(r[..., :-1, :, :])
+        )
+        diff_angle, diff_axis = quat_angle_axis(diff_quat_data)
+        angular_velocity = diff_axis * diff_angle.unsqueeze(-1) 
+        angular_velocity = self._torch_gaussian_kernel(angular_velocity, time_delta)
+        return angular_velocity
+    
+    def _compute_torch_dof_velocity(self, pos, time_delta ):
+        #position is the local rotation
+        diff_quat_data = quat_identity_like(pos)
+        diff_quat_data[..., :-1, :, :] = quat_mul_norm(
+            pos[..., 1:, :, :], quat_inverse(pos[..., :-1, :, :])
+        )
+        diff_angle, diff_axis = quat_angle_axis(diff_quat_data)
+        dof_vel = diff_axis * diff_angle.unsqueeze(-1) 
+        dof_vel = self._torch_gaussian_kernel(dof_vel, time_delta)
+        return dof_vel
 
     def crop(self, start: int, end: int, fps: Optional[int] = None):
         """

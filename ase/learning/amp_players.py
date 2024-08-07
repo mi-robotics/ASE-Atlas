@@ -58,8 +58,8 @@ class AMPPlayerContinuous(common_player.CommonPlayer):
         
         return
 
-    def _post_step(self, info):
-        super()._post_step(info)
+    def _post_step(self, info, obs=None):
+        super()._post_step(info, obs)
         if (self.env.task.viewer):
             try:
                 self._amp_debug(info)

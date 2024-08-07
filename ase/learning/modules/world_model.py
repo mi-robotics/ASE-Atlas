@@ -65,24 +65,34 @@ class ForwardModel(torch.nn.Module):
     def __init__(self, config):
         super().__init__()
 
-        self.input_dim = config['forward_model']['obs_dim'] + config['forward_model']['action_dim']
+        self.input_dim = config['forward_model']['obs_dim'] 
         self.output_dim = config['forward_model']['obs_dim']
         self.units = config['forward_model']['units']
+        self.feature_dim = config['forward_model']['feature_dimension']
+        
+        self.state_encoder = torch.nn.Sequential(
+            torch.nn.Linear(self.input_dim, self.feature_dim),
+            torch.nn.Tanh()
+        )
 
-        self.net = MLP({'input_dim':self.input_dim, 'output_dim':self.output_dim, 'units':self.units})
+        self.net = MLP({'input_dim':self.feature_dim + config['forward_model']['action_dim'], 'output_dim':self.feature_dim , 'units':self.units})
         return
     
     def forward(self, state, action):
-        return self.net(torch.cat((state,action), dim=-1))
+        features = self.state_encoder(state)
+        return self.net(torch.cat((features,action), dim=-1))
     
     def loss(self, next_state, pred, reduce=True):
         """
         Mean squared error
         """
+        with torch.no_grad():
+            target_features = self.state_encoder(next_state) 
+        
         if reduce:
-            return (0.5 * torch.square(next_state - pred).sum(dim=-1)).mean()
+            return (0.5 * torch.square(target_features - pred).sum(dim=-1)).mean()
         else:
-            return (0.5 * torch.square(next_state - pred).sum(dim=-1))
+            return (0.5 * torch.square(target_features - pred).sum(dim=-1))
     
 
 class WorldModel(torch.nn.Module):
@@ -91,6 +101,7 @@ class WorldModel(torch.nn.Module):
         super().__init__()
 
         self.beta = float(config['beta'])
+     
         self.inverse_model:InverseModel = InverseModel(config)
         self.forward_model:ForwardModel = ForwardModel(config)
 
@@ -131,15 +142,10 @@ class WorldModel(torch.nn.Module):
          
             forward_loss = self.forward_model.loss(next_state, next_state_pred, reduce=False)
             
-            print('wm loss')
-            print(forward_loss.mean())
-
             forward_loss = forward_loss.clamp(min=-10, max=10)
         
             reward = (torch.exp(forward_loss) - 1) / (torch.exp(forward_loss) + 1)
-            print(reward.mean())
-            print(reward.shape)
-
+    
             reward = reward.reshape(s0,s1)
 
         

@@ -2,7 +2,7 @@
 env: 
   numEnvs: 1024
   envSpacing: 5
-  episodeLength: 300
+  episodeLength: 3000
   isFlagrun: False
   enableDebugVis: False
   
@@ -13,7 +13,7 @@ env:
   pdControl: True
   powerScale: 1.0
   controlFrequencyInv: 4 #30Hz 4:60hz
-  stateInit: "Hybrid"
+  stateInit: "Start"
   hybridInitProb: 0.5
   numAMPObsSteps: 10 #10
   

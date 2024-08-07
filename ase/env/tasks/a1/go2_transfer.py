@@ -439,7 +439,10 @@ class Go2Transfer(A1ASE):
 
         self._pd_action_offset += mean_delata
         self._pd_action_scale *= scale_diff
-
+        print('here-----------')
+        print(self._pd_action_offset)
+        print(self._pd_action_scale)
+        input()
       
  
         self._pd_action_offset = to_torch(self._pd_action_offset, device=self.device)

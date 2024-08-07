@@ -6,7 +6,7 @@ import numpy as np
 # df['File_Name'] = df['File_Name'].replace('./data', '', regex=False)
 # class_labels = df['Class_Labels'].values
 
-CLS_PATH = '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels_all_motions.pkl'
+CLS_PATH = '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/50b0.1.pkl'
 df = pd.read_pickle(CLS_PATH)
 df = df.sort_values(by='Cluster_Index', ascending=True)
 first_rows = df.groupby('Cluster_Index').first()
@@ -25,6 +25,6 @@ unique_arrays = [np.array(t) for t in class_labels]
 final_array = np.vstack(unique_arrays)
 
 # Save the array to a binary file (.npy)
-np.save('./unique_classes_all_motions.npy', final_array)
+np.save('./unique_classes_50b0.1.npy', final_array)
 
 print(final_array)

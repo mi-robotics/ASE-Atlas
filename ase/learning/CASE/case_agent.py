@@ -61,6 +61,7 @@ class CASEAgent(amp_agent.AMPAgent):
             input_dim = self.vec_env.env.task._velocity_obs_buf.shape[1]
             if self._use_velocity_estimator:
                 input_dim += self._latent_dim
+                input_dim += 64 #skill codes
 
             estimator_config.update({'input_dim':input_dim})
    
@@ -169,7 +170,7 @@ class CASEAgent(amp_agent.AMPAgent):
                     #use the velocity observations to predict the noise 
                     vel_est_input = self.velocity_obs
                     if self._vel_est_use_ase_latent:
-                        vel_est_input = torch.cat([vel_est_input, self._ase_latents],dim=-1)
+                        vel_est_input = torch.cat([vel_est_input, self._ase_latents, self.skill_conditions],dim=-1)
                     velocity_est = self.vel_estimator.inference(vel_est_input)
 
                     #replace the velocity in the observation
@@ -337,7 +338,7 @@ class CASEAgent(amp_agent.AMPAgent):
         if self._optimize_with_velocity_estimate:
             vel_est_input = input_dict['velocity_obs']
             if self._vel_est_use_ase_latent:
-                vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents']], dim=-1)
+                vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents'], input_dict['amp_skill_conditions']], dim=-1)
 
             vel_est = self.vel_estimator.inference(vel_est_input)
 
@@ -353,7 +354,7 @@ class CASEAgent(amp_agent.AMPAgent):
             #Note: we do this first to prevent overwriting GT velocity with using optim with estimates
             vel_est_input = input_dict['velocity_obs']
             if self._vel_est_use_ase_latent:
-                vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents']], dim=-1)
+                vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents'], input_dict['amp_skill_conditions']], dim=-1)
 
             h_gt = critic_obs[:, 0]
             velocity_gt = critic_obs[:, self._vel_obs_index[0]:self._vel_obs_index[1]]

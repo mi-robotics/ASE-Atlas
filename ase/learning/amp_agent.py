@@ -53,6 +53,8 @@ class AMPAgent(common_agent.CommonAgent):
         if self._normalize_amp_input:
             self._amp_input_mean_std = RunningMeanStd(self._amp_observation_space.shape).to(self.ppo_device)
 
+        self.ebm = torch.jit.load('/home/mcarroll/Documents/cdt-1/EMIL/output/jits/emb_v1.pt')
+
         return
 
     def init_tensors(self):
@@ -599,8 +601,17 @@ class AMPAgent(common_agent.CommonAgent):
 
     def _calc_amp_rewards(self, amp_obs):
         disc_r = self._calc_disc_rewards(amp_obs)
+        with torch.no_grad():
+            amp_obs_shaped = amp_obs.reshape(amp_obs.size(0)*amp_obs.size(1), amp_obs.size(2))        
+            energies = self.ebm(amp_obs_shaped).unsqueeze(1)
+
+        #unpack rewards into steps based rewards
+        energies = energies.reshape(amp_obs.size(0), amp_obs.size(1), 1)
+       
         output = {
-            'disc_rewards': disc_r
+            'disc_rewards': disc_r,
+            'energies':energies,
+            'energy_rewards':torch.exp(-(energies))
         }
         return output
 
@@ -633,6 +644,9 @@ class AMPAgent(common_agent.CommonAgent):
     def _record_train_batch_info(self, batch_dict, train_info):
         super()._record_train_batch_info(batch_dict, train_info)
         train_info['disc_rewards'] = batch_dict['disc_rewards']
+        # train_info['energies'] = batch_dict['energies']        
+        # train_info['energy_rewards'] = batch_dict['energy_rewards']
+
         return
 
     def _log_train_info(self, train_info, frame):
@@ -651,6 +665,13 @@ class AMPAgent(common_agent.CommonAgent):
         self.writer.add_scalar('info/disc_reward_mean', disc_reward_mean.item(), frame)
         print( disc_reward_mean.item())
         self.writer.add_scalar('info/disc_reward_std', disc_reward_std.item(), frame)
+
+        # energy_std, energy_mean = torch.std_mean(train_info['energies'])
+        # self.writer.add_scalar('ebm/energy_mean', energy_mean.item(), frame)
+        # self.writer.add_scalar('ebm/energy_std', energy_std.item(), frame)
+        # energy_std, energy_mean = torch.std_mean(train_info['energy_rewards'])
+        # self.writer.add_scalar('ebm/energy_rewards_mean', energy_mean.item(), frame)
+        # self.writer.add_scalar('ebm/energy_rewards_std', energy_std.item(), frame)
         return
 
     def _amp_debug(self, info):

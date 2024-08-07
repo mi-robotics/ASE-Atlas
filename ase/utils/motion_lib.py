@@ -113,7 +113,7 @@ class MotionLib():
         self._is_continual = is_continual
 
         self._use_classes = use_classes
-        self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels_all_motions.pkl'        
+        self._classes_file = f'/home/mcarroll/Documents/cdt-1/completed/ASE-Atlas/ase/utils/50b0.1.pkl'        
         # self._classes_file = f'/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/utils/class_labels.pkl'
 
 
@@ -157,22 +157,22 @@ class MotionLib():
 
     def sample_motions(self, n, exclude_index = None):
 
-        if exclude_index is not None:
-            temp_weights = self._motion_weights.clone()
-            temp_weights[exclude_index] = 0.
-            motion_ids = torch.multinomial(temp_weights, num_samples=n, replacement=True)
-        else:
-            motion_ids = torch.multinomial(self._motion_weights, num_samples=n, replacement=True)
+        # if exclude_index is not None:
+        #     temp_weights = self._motion_weights.clone()
+        #     temp_weights[exclude_index] = 0.
+        #     motion_ids = torch.multinomial(temp_weights, num_samples=n, replacement=True)
+        # else:
+        #     motion_ids = torch.multinomial(self._motion_weights, num_samples=n, replacement=True)
     
-        # m = self.num_motions()
-        # motion_ids = np.random.choice(m, size=n, replace=True, p=self._motion_weights)
-        # motion_ids = torch.tensor(motion_ids, device=self._device, dtype=torch.long)
+        m = self.num_motions()
+        motion_ids = np.random.choice(m, size=n, replace=True)
+        motion_ids = torch.tensor(motion_ids, device=self._device, dtype=torch.long)
         return motion_ids
     
     def sample_skill_labels(self, n):
         #TODO
-        inverse_props = self._weight_groups
-        labels_ids = torch.multinomial(inverse_props, num_samples=n, replacement=True)
+        # inverse_props = self._weight_groups
+        labels_ids = torch.multinomial(self._weight_groups, num_samples=n, replacement=True)
 
         return self._unique_skill_labels[labels_ids] 
 
@@ -300,16 +300,30 @@ class MotionLib():
             self._motion_files.append(curr_file)
 
             if self._use_classes:
-                mf_ = curr_file.replace('./ase/data/motions/.', '')
-         
-                filtered_df = self.df[self.df['File_Name'].str.contains(mf_, na=False)]
-                class_label = filtered_df['Class_Labels'].values[0]
-                self._motion_skill_labels.append(class_label)
-                self._unique_skill_labels.append(class_label)
+                try:
+                    mf_ = curr_file.replace('./ase/data/motions/.', '')
+            
+                    filtered_df = self.df[self.df['File_Name'].str.contains(mf_, na=False)]
+                    class_label = filtered_df['Class_Labels'].values[0] 
+                
 
-                if 'stand' in mf_:
-                    self.recovery_motion_ids.append(len(self._motion_skill_labels)-1)
-                    self.recovery_skill_label = class_label
+                    self._motion_skill_labels.append(class_label)
+                    self._unique_skill_labels.append(class_label)
+
+                    if 'stand' in mf_:
+                        self.recovery_motion_ids.append(len(self._motion_skill_labels)-1)
+                        self.recovery_skill_label = class_label
+                except:
+                    self._motion_fps = self._motion_fps[:-1]
+                    self._motion_dt = self._motion_dt[:-1]
+                    self._motion_num_frames = self._motion_num_frames[:-1]
+
+                    self._motions = self._motions[:-1]
+                    self._motion_lengths =  self._motion_lengths[:-1] 
+                    
+                    self._motion_weights = self._motion_weights[:-1]
+                    self._motion_files = self._motion_files[:-1]
+
 
         if self._use_classes:
             unique_list = []
@@ -352,7 +366,7 @@ class MotionLib():
         amp_classes = torch.cat(self.mb_classes)
         predictions = torch.cat(self.mb_predictions)
 
-        if self._update_step_count>self._warmup_steps:        
+        if self._update_step_count>10:        
         # if self._update_step_count>3:
             self._update_mode_on = True
 
@@ -377,7 +391,7 @@ class MotionLib():
                     mean_score = predictions[matching_indices].mean()
 
                 sigma[c] = mean_score
-                mean_probs[c] = mean_score
+                mean_probs[c] = mean_score.item()
                 total_score += mean_score
                 
             for c in range(len(self._unique_skill_labels)):
@@ -404,8 +418,8 @@ class MotionLib():
         self.mb_classes = []
         self.mb_predictions = []
 
-        if self._is_continual:
-            self._log_weights(self._weight_groups, mean_probs)
+       
+        self._log_weights(self._weight_groups, mean_probs)
         return 
 
     
@@ -416,8 +430,8 @@ class MotionLib():
         
                 entry = json.dumps({
                     "iteration": self._update_step_count,
-                    "class": self._unique_skill_labels[c],
-                    "weights": weights[c],
+                    "class": c,
+                    "weights": weights[c].cpu().item(),
                     "probs": probs[c]
                 })
                 file.write(entry + "\n")
@@ -513,6 +527,7 @@ class MotionLib():
                     dof_pos[:, joint_offset] = joint_theta
                     
                 else:
+                    #TODO wtf have i done here --> i think this is wrong
                     joint_q = local_rot[:, body_id]
 
                     joint_theta, joint_axis = torch_utils.quat_to_angle_axis(joint_q)
@@ -565,6 +580,7 @@ class MotionLib():
                     if len(non_zero) == 0:
                         dof_vel[joint_offset] = joint_vel[0]
                     else:
+                        #TODO wtf have i done here -->i think this is wrong
                         dof_vel[joint_offset] = joint_vel[non_zero][0][0]
 
 

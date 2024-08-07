@@ -37,6 +37,7 @@ from learning import amp_players
 from learning import ase_network_builder
 from learning.modules.velocity_estimator import VelocityEstimator
 from copy import deepcopy
+import time
 
 # ASE_LATENT_FIXING = torch.Tensor([[-0.0583, -0.2628, -0.0631, -0.0972,  0.1531,  0.1208,  0.2005, -0.3900,
 #          -0.0791, -0.2718, -0.5174, -0.1158,  0.2162,  0.0113,  0.1427,  0.0029,
@@ -45,6 +46,60 @@ from copy import deepcopy
 ASE_LATENT_FIXING = None
 
 PLOT_MEASUREMENTS = False
+SAVE_DIR = '/home/mcarroll/Documents/cdt-1/ASE-Atlas/ase/learning/CASE/data/ase_min'
+
+SAVE_DATA = True
+
+class DataItem:
+    def __init__(self):
+        self.obs = None
+        self.next_obs = None
+        self.ase_latents = None
+        self.skill_index = None
+
+class DataCollection:
+    def __init__(self):
+        self.obs = []
+        self.next_obs = []
+        self.ase_latents = []
+        self.skill_index = []
+
+        self.target_epsides = 5000
+        self.num_transitions = 0
+        self.num_episode = 0
+        return 
+    
+    def add_step(self, data:DataItem):
+        self.obs.append(data.obs.clone())
+        # self.next_obs.append(data.next_obs.clone())
+        self.ase_latents.append(data.ase_latents.clone())
+        # self.skill_index.append(data.skill_index.clone())
+
+
+    def save_seq(self):
+        if SAVE_DATA:
+            t = time.time()
+            obs = torch.stack(self.obs)
+            # skill_index = torch.stack(self.skill_index)
+
+            torch.save(obs, f'{SAVE_DIR}/obs_{t}.pt')
+            # torch.save(skill_index, f'{SAVE_DIR}/skill_label_{t}.pt')
+
+        self.obs = []
+        self.next_obs = []
+        self.ase_latents = []
+        self.skill_index = []
+
+        print('SAVED EPISODE ------------------------- ', self.num_episode)
+        self.num_episode += 1
+        if self.num_episode > self.target_epsides:
+            self.quit()
+
+        return 
+
+    def quit(self):
+        print('QUITING ------------------------- 5k EPISODES COLLECTED')
+        quit()
 
 class ASEPlayer(amp_players.AMPPlayerContinuous):
     def __init__(self, config):
@@ -54,7 +109,9 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         self._obs_delay = config.get('player_obs_delay', 0)
 
         self._enc_reward_scale = config['enc_reward_scale']
-        
+
+        self.data_collector = DataCollection()
+        self.data_item = None
         super().__init__(config)
 
         
@@ -72,20 +129,19 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         
         self.modules = {}
 
-        self.base_policy = torch.jit.load('/home/mcarroll/Documents/cdt-1/ASE-Atlas/policy.pt')
-        self.base_policy  = self.base_policy.cuda()
+        # self.base_policy = torch.jit.load('/home/mcarroll/Documents/cdt-1/ASE-Atlas/policy.pt')
+        # self.base_policy  = self.base_policy.cuda()
         
         try:
             print( self.env.task._use_velocity_observation)
-            self._use_velocity_estimator = self.env.task._use_velocity_observation
+            self._use_velocity_estimator = False#self.env.task._use_velocity_observation
         except:
             print('excepted')
             input()
             self._use_velocity_estimator = False
 
         if self._use_velocity_estimator:
-            # print('here')
-            # input()
+       
             estimator_config = config['vel_estimator']
             self._train_with_velocity_estimate = estimator_config.get('trainWithVelocityEstimate', False) #rollouts use estimate
             self._optimize_with_velocity_estimate = estimator_config.get('optimizeWithVelocityEstimate', False) #policy optimization uses estimate
@@ -96,6 +152,7 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
             # print(input_dim)
             if self._use_velocity_estimator:
                 input_dim += self._latent_dim
+                # input_dim += 64
             # print(input_dim)
             # input()
             estimator_config.update({'input_dim':input_dim})
@@ -181,6 +238,13 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
         self._reset_latent_step_count()
         super().run()
         return
+    
+    def _post_step(self, info, obs):
+        #TODO double check this is not preprocessed
+        # self.data_item.next_obs = obs[0].detach().cpu()
+        self.data_collector.add_step(self.data_item)
+        self.data_item = None
+        return
 
     def get_action(self, obs_dict, is_determenistic=False):
         self._update_latents()
@@ -197,7 +261,7 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
 
     
             # Save the scripted model
-            traced_model.save("./velocity_estimator.pt")
+            traced_model.save("./velocity_estimator_h.pt")
             quit()
 
         if False:
@@ -230,8 +294,9 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
 
         # print(self._ase_latents)
         obs = obs_dict['obs']
-        if len(obs.size()) == len(self.obs_shape):
-            obs = obs.unsqueeze(0)
+        obs_raw = obs.clone()
+        # if len(obs.size()) == len(self.obs_shape):
+        #     obs = obs.unsqueeze(0)
 
         # vel_est_input = self.env.task.get_velocity_obs([0])
   
@@ -274,7 +339,11 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
             current_action = action
         current_action = current_action.detach()
         # current_action[:] = 0.
-     
+
+        self.data_item = DataItem()
+        self.data_item.obs = obs_raw[0].detach().cpu()
+        self.data_item.ase_latents = ase_latents[0].detach().cpu()
+      
         return  players.rescale_actions(self.actions_low, self.actions_high, torch.clamp(current_action, -1.0, 1.0))
 
     def update_observation_buffer(self, obs):
@@ -308,8 +377,10 @@ class ASEPlayer(amp_players.AMPPlayerContinuous):
 
     def _update_latents(self):
         if (self._latent_step_count <= 0):
+
             self._reset_latents()
             self._reset_latent_step_count()
+            # self.data_collector.save_seq()
 
             if (self.env.task.viewer):
                 # print("Sampling new amp latents------------------------------")

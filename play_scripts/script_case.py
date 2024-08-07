@@ -7,10 +7,10 @@ command = 'cd .. && python ./ase/run.py \
     --friction_overide 1 \
     --use_delay 0 \
     --num_envs 1 \
-    --cfg_env ./ase/data/cfg/experiments/CASE/env.yaml \
-    --cfg_train ./ase/data/cfg/experiments/CASE/train.yaml \
-    --motion_file ./ase/data/motions/all_inv.yaml\
-    --checkpoint ./output/CASE_FOCAL_FINAL_18-12-09-19/nn/CASE_FOCAL_FINAL.pth'
+    --cfg_env ./ase/data/cfg/experiments/CASE_inference/env.yaml \
+    --cfg_train ./ase/data/cfg/experiments/CASE_inference/train.yaml \
+    --motion_file ./ase/data/motions/all_play.yaml\
+    --checkpoint ./output/CASE_FOCAL_FINAL_ALL_SKILLS_2_31-17-09-00/nn/CASE_FOCAL_FINAL_ALL_SKILLS_2.pth'
 
 # command = 'cd .. && python ./ase/run.py \
 #     --test --task A1ASE \

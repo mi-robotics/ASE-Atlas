@@ -291,12 +291,7 @@ class Humanoid(BaseTask):
 
         dof_prop = self.gym.get_actor_dof_properties(self.envs[0], self.humanoid_handles[0])
 
-        print('DOF PROPERTIES: -------------------------------------------------')
-        print(dof_prop["driveMode"])
-        print(dof_prop["stiffness"])
-        print(dof_prop["damping"])
-     
-
+      
         for j in range(self.num_dof):
             if dof_prop['lower'][j] > dof_prop['upper'][j]:
                 self.dof_limits_lower.append(dof_prop['upper'][j])

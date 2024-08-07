@@ -1,0 +1,160 @@
+params:
+  seed: -1
+
+  algo:
+    name: emil
+
+  model:
+    name: emil
+
+  network:
+    name: emil
+    separate: True
+
+    space:
+      continuous:
+        mu_activation: None
+        sigma_activation: None
+        mu_init:
+          name: default
+        sigma_init:
+          name: const_initializer
+          val: -2.9
+        fixed_sigma: True
+        learn_sigma: False
+
+    world_model:
+      beta: 1e-2
+      forward_model:
+        units: [ 64, 32]
+        feature_dimension: 64
+      inverse_model:
+        units: [128, 64]
+
+
+    lsgm:
+
+      use_mixed_predictions: True
+      kl_coeff: 0.7
+      mixed_logit_init: -3
+
+
+      vpsde:
+        N: 1000
+        eps_t: 1e-4
+        sigma2_0: 0.
+        beta_min: 0.1
+        beta_max: 20.
+
+
+      score_model:
+        units: [1024, 1024, 512]
+        time_embd_dim: 64
+        activation: relu
+
+      vae:
+        latent_dim: 128
+        activation: relu
+        recon_skill: True
+        recon_state: False
+        recon_next_state: False
+        beta: 0.5
+        use_mean_eval: True
+        use_seperate_reconstructor: False
+        encoder:
+          units: [1024, 1024, 512]
+        decoder:
+          units: [1024, 1024, 512]
+
+    mlp:
+      units: [1024, 512]
+      activation: relu
+      d2rl: False
+
+      initializer:
+        name: default
+      regularizer:
+        name: None
+
+    disc:
+      units: [1024, 512]
+      activation: relu
+
+      initializer:
+        name: default
+
+    enc:
+      units: [1024, 512]
+      activation: relu
+      separate: False
+
+      initializer:
+        name: default
+
+  load_checkpoint: False
+
+  config:
+    name: EMIL_DEBUG
+    env_name: rlgpu
+    multi_gpu: False
+    ppo: True
+    mixed_precision: False
+    normalize_input: True
+    normalize_value: True
+    reward_shaper:
+      scale_value: 1
+    normalize_advantage: True
+    gamma: 0.99
+    tau: 0.95
+    learning_rate: 2e-5
+    lr_schedule: constant
+    kl_threshold: -0.01
+    score_to_win: 20000
+    max_epochs: 100000
+    save_best_after: 50
+    save_frequency: 50
+    print_stats: True
+    grad_norm: 1.0
+    entropy_coef: 0.0
+    truncate_grads: False
+    ppo: True
+    e_clip: 0.2
+    horizon_length: 32
+    minibatch_size: 16384
+    mini_epochs: 6
+    critic_coef: 5
+    clip_value: False
+    seq_len: 4
+    bounds_loss_coef: 10
+    amp_obs_demo_buffer_size: 200000
+    amp_replay_buffer_size: 200000
+    amp_replay_keep_prob: 0.01
+    amp_batch_size: 512
+    amp_minibatch_size: 4096
+    disc_coef: 5
+    disc_logit_reg: 0.01
+    disc_grad_penalty: 5
+    disc_reward_scale: 2
+    disc_weight_decay: 0.0001
+    normalize_amp_input: False
+    enable_eps_greedy: True
+
+    latent_dim: 64
+    latent_steps_min: 1
+    latent_steps_max: 150
+    
+    amp_latent_grad_bonus: 0.00
+    amp_latent_grad_bonus_max: 100.0
+    amp_diversity_bonus: 0.01
+    amp_diversity_tar: 1.0
+    
+    enc_coef: 5
+    enc_weight_decay: 0.0000
+    enc_reward_scale: 1
+    enc_grad_penalty: 0
+
+    task_reward_w: 0.0
+    disc_reward_w: 1.0
+    curi_reward_w: 0.5
+    curiosity_coef: 1
+ 
