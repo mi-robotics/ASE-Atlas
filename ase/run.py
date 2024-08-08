@@ -76,6 +76,11 @@ from learning.EMIL import emil_models
 from learning.EMIL import emil_player
 from learning.EMIL import emil_network_builder
 
+from learning.dimase import dim_agent
+from learning.dimase import dim_models
+# from learning.dimase import emil_player
+from learning.dimase import dim_network_builder
+
 
 from learning import hrl_agent
 from learning import hrl_players
@@ -241,6 +246,11 @@ def build_alg_runner(algo_observer):
     runner.player_factory.register_builder('emil', lambda **kwargs : emil_player.EMILPlayerContinuous(**kwargs))
     runner.model_builder.model_factory.register_builder('emil', lambda network, **kwargs : emil_models.ModelEMILContinuous(network))  
     runner.model_builder.network_factory.register_builder('emil', lambda **kwargs : emil_network_builder.EMILBuilder())
+
+    runner.algo_factory.register_builder('dim', lambda **kwargs : dim_agent.DIMAgent(**kwargs))
+    # runner.player_factory.register_builder('dim', lambda **kwargs : emil_player.EMILPlayerContinuous(**kwargs))
+    runner.model_builder.model_factory.register_builder('dim', lambda network, **kwargs : dim_models.ModelDIMContinuous(network))  
+    runner.model_builder.network_factory.register_builder('dim', lambda **kwargs : dim_network_builder.DIMBuilder())
     
 
     runner.algo_factory.register_builder('hrl', lambda **kwargs : hrl_agent.HRLAgent(**kwargs))

@@ -39,7 +39,7 @@ from learning import ase_network_builder
 from learning.modules.velocity_estimator import VelocityEstimator
 from copy import deepcopy
 
-class ASEAgent(amp_agent.AMPAgent):
+class DIMAgent(amp_agent.AMPAgent):
     def __init__(self, base_name, config):
         super().__init__(base_name, config)
 
@@ -354,6 +354,7 @@ class ASEAgent(amp_agent.AMPAgent):
         amp_obs_demo.requires_grad_(True)
 
         ase_latents = input_dict['ase_latents']
+        amp_obs_latents = input_dict['ase_latents'][0:self._amp_minibatch_size]
         
         rand_action_mask = input_dict['rand_action_mask']
         rand_action_sum = torch.sum(rand_action_mask)
@@ -371,7 +372,8 @@ class ASEAgent(amp_agent.AMPAgent):
             'amp_obs_replay' : amp_obs_replay,
             'amp_obs_demo' : amp_obs_demo,
             'ase_latents': ase_latents,
-            'critic_obs':critic_obs
+            'critic_obs':critic_obs,
+            'amp_obs_latents':amp_obs_latents
         }
 
         rnn_masks = None
@@ -603,12 +605,12 @@ class ASEAgent(amp_agent.AMPAgent):
         # prediction loss
         disc_loss_agent = self._disc_loss_neg(dim_fake_logit)
         disc_loss_demo = self._disc_loss_pos(dim_real_logit)
-        disc_loss = 0.5 * (disc_loss_agent + disc_loss_demo)
+        dim_loss = 0.5 * (disc_loss_agent + disc_loss_demo)
 
         # logit reg
         logit_weights = self.model.a2c_network.get_dim_logit_weights()
-        disc_logit_loss = torch.sum(torch.square(logit_weights))
-        disc_loss += self._disc_logit_reg * disc_logit_loss
+        dim_logit_loss = torch.sum(torch.square(logit_weights))
+        dim_loss += self._disc_logit_reg * dim_logit_loss
 
         # grad penalty
         dim_real_grad = torch.autograd.grad(dim_real_logit, dim_real_input, grad_outputs=torch.ones_like(dim_real_logit),
@@ -616,18 +618,30 @@ class ASEAgent(amp_agent.AMPAgent):
         dim_real_grad = dim_real_grad[0]
         dim_real_grad = torch.sum(torch.square(dim_real_grad), dim=-1)
         dim_real_penalty = torch.mean(dim_real_grad)
-        disc_loss += self._disc_grad_penalty * dim_real_penalty
+        dim_loss += self._disc_grad_penalty * dim_real_penalty
+
+        
 
         # weight decay
         if (self._disc_weight_decay != 0):
-            disc_weights = self.model.a2c_network.get_dim_weights()
-            disc_weights = torch.cat(disc_weights, dim=-1)
-            disc_weight_decay = torch.sum(torch.square(disc_weights))
-            disc_loss += self._disc_weight_decay * disc_weight_decay
+            dim_weights = self.model.a2c_network.get_dim_weights()
+            dim_weights = torch.cat(dim_weights, dim=-1)
+            dim_weight_decay = torch.sum(torch.square(dim_weights))
+            dim_loss += self._disc_weight_decay * dim_weight_decay
 
         dim_fake_acc, dim_real_acc = self._compute_disc_acc(dim_fake_logit, dim_real_logit)
-        return 
-   
+
+        dim_info = {
+            'dim_loss': dim_loss,
+            'dim_grad_penalty': dim_real_penalty.detach(),
+            'dim_logit_loss': dim_logit_loss.detach(),
+            'dim_fake_acc': dim_fake_acc.detach(),
+            'dim_real_acc': dim_real_acc.detach(),
+            'dim_fake_logit': dim_fake_logit.detach(),
+            'dim_real_logit': dim_real_logit.detach()
+        }
+        return dim_info
+
 
     def _enc_loss(self, enc_pred, ase_latent, enc_obs, loss_mask):
         enc_err = self._calc_enc_error(enc_pred, ase_latent)
@@ -702,15 +716,15 @@ class ASEAgent(amp_agent.AMPAgent):
 
     def _combine_rewards(self, task_rewards, amp_rewards):
         disc_r = amp_rewards['disc_rewards']
-        enc_r = amp_rewards['enc_rewards']
+        dim_r = amp_rewards['dim_rewards']
         combined_rewards = self._task_reward_w * task_rewards \
                          + self._disc_reward_w * disc_r \
-                         + self._enc_reward_w * enc_r
+                         + self._enc_reward_w * dim_r
         return combined_rewards
 
     def _record_train_batch_info(self, batch_dict, train_info):
         super()._record_train_batch_info(batch_dict, train_info)
-        train_info['enc_rewards'] = batch_dict['enc_rewards']
+        train_info['dim_rewards'] = batch_dict['dim_rewards']
         return
 
     def _log_train_info(self, train_info, frame):
@@ -724,12 +738,25 @@ class ASEAgent(amp_agent.AMPAgent):
         if (self._enable_amp_diversity_bonus()):
             self.writer.add_scalar('losses/amp_diversity_loss', torch_ext.mean_list(train_info['amp_diversity_loss']).item(), frame)
         
-        enc_reward_std, enc_reward_mean = torch.std_mean(train_info['enc_rewards'])
-        self.writer.add_scalar('info/enc_reward_mean', enc_reward_mean.item(), frame)
-        self.writer.add_scalar('info/enc_reward_std', enc_reward_std.item(), frame)
+        # enc_reward_std, enc_reward_mean = torch.std_mean(train_info['enc_rewards'])
+        # self.writer.add_scalar('info/enc_reward_mean', enc_reward_mean.item(), frame)
+        # self.writer.add_scalar('info/enc_reward_std', enc_reward_std.item(), frame)
 
-        if (self._enable_enc_grad_penalty()):
-            self.writer.add_scalar('info/enc_grad_penalty', torch_ext.mean_list(train_info['enc_grad_penalty']).item(), frame)
+        # if (self._enable_enc_grad_penalty()):
+        #     self.writer.add_scalar('info/enc_grad_penalty', torch_ext.mean_list(train_info['enc_grad_penalty']).item(), frame)
+        self.writer.add_scalar('losses/dim_loss', torch_ext.mean_list(train_info['dim_loss']).item(), frame)
+
+        self.writer.add_scalar('dim_info/dim_fake_acc', torch_ext.mean_list(train_info['dim_fake_acc']).item(), frame)
+        self.writer.add_scalar('dim_info/dim_real_acc', torch_ext.mean_list(train_info['dim_real_acc']).item(), frame)
+        self.writer.add_scalar('dim_info/dim_fake_logit', torch_ext.mean_list(train_info['dim_fake_logit']).item(), frame)
+        self.writer.add_scalar('dim_info/dim_real_logit', torch_ext.mean_list(train_info['dim_real_logit']).item(), frame)
+        self.writer.add_scalar('dim_info/dim_grad_penalty', torch_ext.mean_list(train_info['dim_grad_penalty']).item(), frame)
+        self.writer.add_scalar('dim_info/dim_logit_loss', torch_ext.mean_list(train_info['dim_logit_loss']).item(), frame)
+
+        disc_reward_std, disc_reward_mean = torch.std_mean(train_info['dim_rewards'])
+        self.writer.add_scalar('info/dim_reward_mean', disc_reward_mean.item(), frame)
+        print( disc_reward_mean.item())
+        self.writer.add_scalar('info/dim_reward_std', disc_reward_std.item(), frame)
 
         return
 

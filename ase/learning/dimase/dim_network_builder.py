@@ -45,7 +45,7 @@ class LatentType(enum.Enum):
     uniform = 0
     sphere = 1
 
-class ASEBuilder(amp_network_builder.AMPBuilder):
+class DIMBuilder(amp_network_builder.AMPBuilder):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         return
@@ -240,8 +240,8 @@ class ASEBuilder(amp_network_builder.AMPBuilder):
 
             return
         
-        def eval_dim(self, amp_obs):
-            disc_mlp_out = self._dim_mlp(amp_obs)
+        def eval_dim(self, transitions_z):
+            disc_mlp_out = self._dim_mlp(transitions_z)
             disc_logits = self._dim_logits(disc_mlp_out)
             return disc_logits
 
@@ -249,7 +249,20 @@ class ASEBuilder(amp_network_builder.AMPBuilder):
             device = next(self._enc.parameters()).device
             z = torch.normal(torch.zeros([n, self._ase_latent_shape[-1]], device=device))
             z = torch.nn.functional.normalize(z, dim=-1)
+
             return z
+        
+        def get_dim_logit_weights(self):
+            return torch.flatten(self._dim_logits.weight)
+
+        def get_dim_weights(self):
+            weights = []
+            for m in self._dim_mlp.modules():
+                if isinstance(m, nn.Linear):
+                    weights.append(torch.flatten(m.weight))
+
+            weights.append(torch.flatten(self._dim_logits.weight))
+            return weights
 
     def build(self, name, **kwargs):
         net = ASEBuilder.Network(self.params, **kwargs)

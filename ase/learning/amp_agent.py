@@ -228,8 +228,11 @@ class AMPAgent(common_agent.CommonAgent):
 
         if (self._amp_replay_buffer.get_total_count() == 0):
             batch_dict['amp_obs_replay'] = batch_dict['amp_obs']
+            batch_dict['ase_latents_replay'] = batch_dict['ase_latents']
         else:
-            batch_dict['amp_obs_replay'] = self._amp_replay_buffer.sample(num_obs_samples)['amp_obs']
+            replay_samples = self._amp_replay_buffer.sample(num_obs_samples)
+            batch_dict['amp_obs_replay'] = replay_samples['amp_obs']
+            batch_dict['ase_latents_replay'] = replay_samples['ase_latents']
 
         self.set_train()
 
@@ -289,7 +292,7 @@ class AMPAgent(common_agent.CommonAgent):
         update_time = update_time_end - update_time_start
         total_time = update_time_end - play_time_start
 
-        self._store_replay_amp_obs(batch_dict['amp_obs'])
+        self._store_replay_amp_obs(batch_dict['amp_obs'], ase_latents=batch_dict['ase_latents'])
 
         train_info['play_time'] = play_time
         train_info['update_time'] = update_time
@@ -317,6 +320,7 @@ class AMPAgent(common_agent.CommonAgent):
         amp_obs = input_dict['amp_obs'][0:self._amp_minibatch_size]
         amp_obs = self._preproc_amp_obs(amp_obs)
         amp_obs_replay = input_dict['amp_obs_replay'][0:self._amp_minibatch_size]
+        ase_latents_replay = input_dict['ase_latents_replay'][0:self._amp_minibatch_size]
         amp_obs_replay = self._preproc_amp_obs(amp_obs_replay)
 
         amp_obs_demo = input_dict['amp_obs_demo'][0:self._amp_minibatch_size]
@@ -337,6 +341,7 @@ class AMPAgent(common_agent.CommonAgent):
             'obs' : obs_batch,
             'amp_obs' : amp_obs,
             'amp_obs_replay' : amp_obs_replay,
+            'ase_latents_replay': ase_latents_replay,
             'amp_obs_demo' : amp_obs_demo
         }
 
@@ -624,20 +629,22 @@ class AMPAgent(common_agent.CommonAgent):
 
         return disc_r
 
-    def _store_replay_amp_obs(self, amp_obs):
+    def _store_replay_amp_obs(self, amp_obs, ase_latents):
         buf_size = self._amp_replay_buffer.get_buffer_size()
         buf_total_count = self._amp_replay_buffer.get_total_count()
         if (buf_total_count > buf_size):
             keep_probs = to_torch(np.array([self._amp_replay_keep_prob] * amp_obs.shape[0]), device=self.ppo_device)
             keep_mask = torch.bernoulli(keep_probs) == 1.0
             amp_obs = amp_obs[keep_mask]
+            ase_latents = ase_latents[keep_mask]
 
         if (amp_obs.shape[0] > buf_size):
             rand_idx = torch.randperm(amp_obs.shape[0])
             rand_idx = rand_idx[:buf_size]
             amp_obs = amp_obs[rand_idx]
+            ase_latents = ase_latents[keep_mask]
 
-        self._amp_replay_buffer.store({'amp_obs': amp_obs})
+        self._amp_replay_buffer.store({'amp_obs': amp_obs, 'ase_latnets':ase_latents})
         return
 
     
