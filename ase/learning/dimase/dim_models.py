@@ -60,7 +60,7 @@ class ModelDIMContinuous(amp_models.ModelAMPContinuous):
                 amp_obs = torch.cat((amp_obs, amp_obs_replay))
                 amp_obs_latents = torch.cat((amp_obs_latents, ase_latents_replay))
                 
-                result['dim_real_logit'], result['dim_fake_logits'] = self.dim_forward(amp_obs, amp_obs_latents)
+                result['dim_real_logit'], result['dim_fake_logit'] = self.dim_forward(amp_obs, amp_obs_latents)
 
             return result
         
@@ -68,8 +68,8 @@ class ModelDIMContinuous(amp_models.ModelAMPContinuous):
 
             real_samples = torch.cat((amp_obs, amp_obs_latents), dim=-1)
 
-            print('CHECKING LATENT SHAPES---')
-            print(amp_obs_latents.size())
+            # print('CHECKING LATENT SHAPES---')
+            # print(amp_obs_latents.size())
             fake_latents = amp_obs_latents[torch.randperm(amp_obs_latents.size(0))]
             fake_samples = torch.cat((amp_obs, fake_latents), dim=-1)
 

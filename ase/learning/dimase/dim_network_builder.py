@@ -125,10 +125,10 @@ class DIMBuilder(amp_network_builder.AMPBuilder):
         def load(self, params):
             super().load(params)
            
-            self._enc_units = params['enc']['units']
-            self._enc_activation = params['enc']['activation']
-            self._enc_initializer = params['enc']['initializer']
-            self._enc_separate = params['enc']['separate']
+            # self._enc_units = params['enc']['units']
+            # self._enc_activation = params['enc']['activation']
+            # self._enc_initializer = params['enc']['initializer']
+            # self._enc_separate = params['enc']['separate']
 
             return
 
@@ -139,6 +139,8 @@ class DIMBuilder(amp_network_builder.AMPBuilder):
             critic_obs = obs_dict.get('critic_obs', None )
 
             use_hidden_latents = obs_dict.get('use_hidden_latents', False)
+            
+      
 
             actor_outputs = self.eval_actor(obs, ase_latents, use_hidden_latents)
             
@@ -246,7 +248,7 @@ class DIMBuilder(amp_network_builder.AMPBuilder):
             return disc_logits
 
         def sample_latents(self, n):
-            device = next(self._enc.parameters()).device
+            device = next(self._dim_mlp.parameters()).device
             z = torch.normal(torch.zeros([n, self._ase_latent_shape[-1]], device=device))
             z = torch.nn.functional.normalize(z, dim=-1)
 
@@ -265,7 +267,7 @@ class DIMBuilder(amp_network_builder.AMPBuilder):
             return weights
 
     def build(self, name, **kwargs):
-        net = ASEBuilder.Network(self.params, **kwargs)
+        net = DIMBuilder.Network(self.params, **kwargs)
         return net
 
 

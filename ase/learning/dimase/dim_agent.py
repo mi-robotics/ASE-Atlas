@@ -42,6 +42,7 @@ from copy import deepcopy
 class DIMAgent(amp_agent.AMPAgent):
     def __init__(self, base_name, config):
         super().__init__(base_name, config)
+      
 
         self.modules = {}
         
@@ -293,7 +294,7 @@ class DIMAgent(amp_agent.AMPAgent):
     
     def calc_gradients(self, input_dict):
         self.set_train()
-
+      
         value_preds_batch = input_dict['old_values']
         old_action_log_probs_batch = input_dict['old_logp_actions']
         advantage = input_dict['advantages']
@@ -302,26 +303,31 @@ class DIMAgent(amp_agent.AMPAgent):
         return_batch = input_dict['returns']
         actions_batch = input_dict['actions']
         obs_batch = input_dict['obs']
+
+      
+
+       
         critic_obs = None
 
         if self._use_velocity_estimator:
             _obs = input_dict['obs'].clone()
 
-        if self._optimize_with_velocity_estimate:
-            vel_est_input = input_dict['velocity_obs']
-            if self._vel_est_use_ase_latent:
-                vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents']], dim=-1)
+            if self._optimize_with_velocity_estimate:
+                vel_est_input = input_dict['velocity_obs']
+                if self._vel_est_use_ase_latent:
+                    vel_est_input = torch.cat([vel_est_input, input_dict['ase_latents']], dim=-1)
 
-            state_est = self.vel_estimator.inference(vel_est_input)
-            obs_batch[:, self._vel_obs_index[0]:self._vel_obs_index[1]] = state_est[:, 1:]            
-            obs_batch[:, 0] = state_est[:, 0]
+                state_est = self.vel_estimator.inference(vel_est_input)
+                obs_batch[:, self._vel_obs_index[0]:self._vel_obs_index[1]] = state_est[:, 1:]            
+                obs_batch[:, 0] = state_est[:, 0]
 
 
-            if self._vel_est_asymetric_train:
-                critic_obs = input_dict['critic_obs']
+                if self._vel_est_asymetric_train:
+                    critic_obs = input_dict['critic_obs']
 
 
         if self._use_velocity_estimator:
+            raise Exception('rule out this path')
             #Note: we do this first to prevent overwriting GT velocity with using optim with estimates
             vel_est_input = input_dict['velocity_obs']
             if self._vel_est_use_ase_latent:
@@ -337,17 +343,23 @@ class DIMAgent(amp_agent.AMPAgent):
             torch.nn.utils.clip_grad_norm_(self.vel_estimator.parameters(), self.vel_grad_norm)
             self.vel_optim.step()
 
+      
         obs_batch = self._preproc_obs(obs_batch)
+     
         if critic_obs is not None:
+            raise Exception('rule this out')
             critic_obs = self._preproc_obs(critic_obs)
 
         amp_obs = input_dict['amp_obs'][0:self._amp_minibatch_size]
         amp_obs = self._preproc_amp_obs(amp_obs)
+        # amp_obs.requires_grad_(True)
+      
         if (self._enable_enc_grad_penalty()):
             amp_obs.requires_grad_(True)
 
         amp_obs_replay = input_dict['amp_obs_replay'][0:self._amp_minibatch_size]
         amp_obs_replay = self._preproc_amp_obs(amp_obs_replay)
+        ase_latents_replay = input_dict['ase_latents_replay'][0:self._amp_minibatch_size]
 
         amp_obs_demo = input_dict['amp_obs_demo'][0:self._amp_minibatch_size]
         amp_obs_demo = self._preproc_amp_obs(amp_obs_demo)
@@ -355,6 +367,7 @@ class DIMAgent(amp_agent.AMPAgent):
 
         ase_latents = input_dict['ase_latents']
         amp_obs_latents = input_dict['ase_latents'][0:self._amp_minibatch_size]
+        # amp_obs_latents.requires_grad_(True)
         
         rand_action_mask = input_dict['rand_action_mask']
         rand_action_sum = torch.sum(rand_action_mask)
@@ -370,6 +383,7 @@ class DIMAgent(amp_agent.AMPAgent):
             'obs' : obs_batch,
             'amp_obs' : amp_obs,
             'amp_obs_replay' : amp_obs_replay,
+            'ase_latents_replay': ase_latents_replay,
             'amp_obs_demo' : amp_obs_demo,
             'ase_latents': ase_latents,
             'critic_obs':critic_obs,
@@ -423,12 +437,8 @@ class DIMAgent(amp_agent.AMPAgent):
             disc_loss = disc_info['disc_loss']
             
            
-            dim_loss_mask = rand_action_mask[0:self._amp_minibatch_size]
-            # enc_info = self._enc_loss(enc_pred, enc_latents, batch_dict['amp_obs'], enc_loss_mask)
-          
-            # enc_loss = enc_info['enc_loss']
-            #TODO return infos, impliment masking
-            dim_loss_info = self._dim_loss(dim_real_logit, dim_fake_logit, dim_loss_mask)
+            real_dim_input= torch.cat((amp_obs, amp_obs_latents), dim=-1)
+            dim_loss_info = self._dim_loss(dim_real_logit, dim_fake_logit, real_dim_input)
             dim_loss = dim_loss_info['dim_loss']
             
 
@@ -591,16 +601,19 @@ class DIMAgent(amp_agent.AMPAgent):
             disc_logits = self._eval_dim(amp_obs, ase_latents)
             prob = 1 / (1 + torch.exp(-disc_logits)) 
             disc_r = -torch.log(torch.maximum(1 - prob, torch.tensor(0.0001, device=self.ppo_device)))
-            disc_r *= self._disc_reward_scale
+            disc_r *= self._enc_reward_scale
 
         return disc_r
     
     def _eval_dim(self, amp_obs, ase_latents):
         proc_amp_obs = self._preproc_amp_obs(amp_obs)
-        return self.model.a2c_network.eval_dim(proc_amp_obs, ase_latents)
+        transitions_z = torch.cat((proc_amp_obs, ase_latents), dim=-1)
+        return self.model.a2c_network.eval_dim(transitions_z)
 
     
     def _dim_loss(self, dim_real_logit, dim_fake_logit, dim_real_input):
+
+        
        
         # prediction loss
         disc_loss_agent = self._disc_loss_neg(dim_fake_logit)
@@ -613,12 +626,12 @@ class DIMAgent(amp_agent.AMPAgent):
         dim_loss += self._disc_logit_reg * dim_logit_loss
 
         # grad penalty
-        dim_real_grad = torch.autograd.grad(dim_real_logit, dim_real_input, grad_outputs=torch.ones_like(dim_real_logit),
-                                             create_graph=True, retain_graph=True, only_inputs=True)
-        dim_real_grad = dim_real_grad[0]
-        dim_real_grad = torch.sum(torch.square(dim_real_grad), dim=-1)
-        dim_real_penalty = torch.mean(dim_real_grad)
-        dim_loss += self._disc_grad_penalty * dim_real_penalty
+        # dim_real_grad = torch.autograd.grad(dim_real_logit, dim_real_input, grad_outputs=torch.ones_like(dim_real_logit),
+        #                                      create_graph=True, retain_graph=True, only_inputs=True)
+        # dim_real_grad = dim_real_grad[0]
+        # dim_real_grad = torch.sum(torch.square(dim_real_grad), dim=-1)
+        # dim_real_penalty = torch.mean(dim_real_grad)
+        # dim_loss += self._disc_grad_penalty * dim_real_penalty
 
         
 
@@ -633,7 +646,7 @@ class DIMAgent(amp_agent.AMPAgent):
 
         dim_info = {
             'dim_loss': dim_loss,
-            'dim_grad_penalty': dim_real_penalty.detach(),
+            'dim_grad_penalty': torch.zeros_like(dim_loss),#dim_real_penalty.detach(),
             'dim_logit_loss': dim_logit_loss.detach(),
             'dim_fake_acc': dim_fake_acc.detach(),
             'dim_real_acc': dim_real_acc.detach(),
@@ -730,7 +743,7 @@ class DIMAgent(amp_agent.AMPAgent):
     def _log_train_info(self, train_info, frame):
         super()._log_train_info(train_info, frame)
         
-        self.writer.add_scalar('losses/enc_loss', torch_ext.mean_list(train_info['enc_loss']).item(), frame)
+        # self.writer.add_scalar('losses/enc_loss', torch_ext.mean_list(train_info['enc_loss']).item(), frame)
 
         if self._use_velocity_estimator:
             self.writer.add_scalar('losses/velocity_est_loss', torch_ext.mean_list(train_info['velocity_est_loss']).item(), frame)
@@ -755,7 +768,7 @@ class DIMAgent(amp_agent.AMPAgent):
 
         disc_reward_std, disc_reward_mean = torch.std_mean(train_info['dim_rewards'])
         self.writer.add_scalar('info/dim_reward_mean', disc_reward_mean.item(), frame)
-        print( disc_reward_mean.item())
+        print( 'dim r', disc_reward_mean.item())
         self.writer.add_scalar('info/dim_reward_std', disc_reward_std.item(), frame)
 
         return

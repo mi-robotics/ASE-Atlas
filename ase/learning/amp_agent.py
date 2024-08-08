@@ -53,7 +53,7 @@ class AMPAgent(common_agent.CommonAgent):
         if self._normalize_amp_input:
             self._amp_input_mean_std = RunningMeanStd(self._amp_observation_space.shape).to(self.ppo_device)
 
-        self.ebm = torch.jit.load('/home/mcarroll/Documents/cdt-1/EMIL/output/jits/emb_v1.pt')
+        # self.ebm = torch.jit.load('/home/mcarroll/Documents/cdt-1/EMIL/output/jits/emb_v1.pt')
 
         return
 
@@ -203,6 +203,7 @@ class AMPAgent(common_agent.CommonAgent):
         self.dataset.values_dict['amp_obs'] = batch_dict['amp_obs']
         self.dataset.values_dict['amp_obs_demo'] = batch_dict['amp_obs_demo']
         self.dataset.values_dict['amp_obs_replay'] = batch_dict['amp_obs_replay']
+        self.dataset.values_dict['ase_latents_replay'] = batch_dict['ase_latents_replay']
         
         rand_action_mask = batch_dict['rand_action_mask']
         self.dataset.values_dict['rand_action_mask'] = rand_action_mask
@@ -644,7 +645,7 @@ class AMPAgent(common_agent.CommonAgent):
             amp_obs = amp_obs[rand_idx]
             ase_latents = ase_latents[keep_mask]
 
-        self._amp_replay_buffer.store({'amp_obs': amp_obs, 'ase_latnets':ase_latents})
+        self._amp_replay_buffer.store({'amp_obs': amp_obs, 'ase_latents':ase_latents})
         return
 
     
@@ -670,7 +671,7 @@ class AMPAgent(common_agent.CommonAgent):
 
         disc_reward_std, disc_reward_mean = torch.std_mean(train_info['disc_rewards'])
         self.writer.add_scalar('info/disc_reward_mean', disc_reward_mean.item(), frame)
-        print( disc_reward_mean.item())
+        print( 'disc r', disc_reward_mean.item())
         self.writer.add_scalar('info/disc_reward_std', disc_reward_std.item(), frame)
 
         # energy_std, energy_mean = torch.std_mean(train_info['energies'])

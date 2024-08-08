@@ -280,6 +280,7 @@ class ASEAgent(amp_agent.AMPAgent):
     def prepare_dataset(self, batch_dict):
         super().prepare_dataset(batch_dict)
         
+        
         ase_latents = batch_dict['ase_latents']
         self.dataset.values_dict['ase_latents'] = ase_latents
         self.dataset.values_dict['critic_obs'] = batch_dict['critic_obs']
@@ -293,6 +294,7 @@ class ASEAgent(amp_agent.AMPAgent):
     
     def calc_gradients(self, input_dict):
         self.set_train()
+ 
 
         value_preds_batch = input_dict['old_values']
         old_action_log_probs_batch = input_dict['old_logp_actions']
